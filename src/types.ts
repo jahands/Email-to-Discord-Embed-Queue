@@ -11,6 +11,8 @@ export interface Env {
 	// Example binding to a Service. Learn more at https://developers.cloudflare.com/workers/runtime-apis/service-bindings/
 	// MY_SERVICE: Fetcher;
 	DISCORDHOOK: string
+	GITHUBHOOK: string
+	DISQUSHOOK: string
 	R2EMAILS: R2Bucket
 }
 

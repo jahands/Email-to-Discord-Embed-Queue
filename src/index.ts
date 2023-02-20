@@ -3,16 +3,13 @@ import PostalMime from "postal-mime";
 import { ThrottledQueue } from '@jahands/msc-utils'
 import { EmbedQueueData, Env } from './types'
 
-const throttleQueue = new ThrottledQueue({ concurrency: 1, interval: 5000, limit: 5 });
-
 export default {
 	async queue(batch: MessageBatch<EmbedQueueData>, env: Env, ctx: ExecutionContext) {
 		// Extract the body from each message.
 		// Metadata is also available, such as a message id and timestamp.
 		for (const message of batch.messages) {
-			throttleQueue.add(async () => sendDiscordEmbed(message.body, env, ctx))
+			await sendDiscordEmbed(message.body, env, ctx)
 		}
-		await throttleQueue.onIdle()
 	},
 };
 
@@ -67,7 +64,8 @@ async function sendDiscordEmbed(message: EmbedQueueData, env: Env, ctx: Executio
 				)
 			}
 		}
-		const discordResponse = await fetch(env.DISCORDHOOK, {
+		const hook = await getDiscordWebhook(message.from, env)
+		const discordResponse = await fetch(hook, {
 			method: "POST",
 			body: formData,
 		})
@@ -76,7 +74,19 @@ async function sendDiscordEmbed(message: EmbedQueueData, env: Env, ctx: Executio
 			console.log(
 				`Discord Response: ${discordResponse.status} ${discordResponse.statusText}`
 			)
-			console.log(await discordResponse.json())
+			if (discordResponse.status === 429) {
+				const body = await discordResponse.json() as { retry_after: number | undefined }
+				console.log(body)
+				if (body.retry_after) {
+					console.log('sleeping...')
+					await sleep(body.retry_after * 1000)
+					// retry
+					await fetch(await getDiscordWebhook(message.from, env), {
+						method: "POST",
+						body: formData,
+					})
+				}
+			}
 		}
 		// You probably will want to forward the mail anyway to an address, in case discord is down,
 		// Or you could make it fail if the webhook fails, causing the sending mail server to error out.
@@ -85,4 +95,27 @@ async function sendDiscordEmbed(message: EmbedQueueData, env: Env, ctx: Executio
 	} catch (e) {
 		console.log('error!', e)
 	}
+}
+
+// get ready for a big hack for how I'm rate-limiting per webhook here...
+const newQueue = () => new ThrottledQueue({ concurrency: 1, interval: 1000, limit: 1 });
+const defaultQueue = newQueue()
+const githubQueue = newQueue()
+const disqusQueue = newQueue()
+async function getDiscordWebhook(from: string, env: Env): Promise<string> {
+	let hook = env.DISCORDHOOK
+	if (from === 'noreply@github.com') {
+		await githubQueue.add(async () => { })
+		hook = env.GITHUBHOOK
+	} else if (from === 'notifications@disqus.net') {
+		await disqusQueue.add(async () => { })
+		hook = env.DISQUSHOOK
+	} else {
+		await defaultQueue.add(async () => { })
+	}
+	return hook
+}
+
+function sleep(ms: number) {
+	return new Promise(resolve => setTimeout(resolve, ms));
 }
