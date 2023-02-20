@@ -14,6 +14,7 @@ export interface Env {
 	GITHUBHOOK: string
 	DISQUSHOOK: string
 	GERRITHOOK: string
+	GOOGLEALERTSHOOK: string
 	R2EMAILS: R2Bucket
 	BOTTOKEN: string // Discord bot token to improve ratelimits
 }

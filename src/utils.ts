@@ -16,6 +16,8 @@ export async function getDiscordWebhook(from: string, env: Env): Promise<string>
 		hook = env.DISQUSHOOK
 	} else if (from.match(/^postmaster@mail[a-z0-9-]*\.google\.com$/)) {
 		hook = env.GERRITHOOK
+	} else if (from.endsWith('@alerts.bounces.google.com')) {
+		hook = env.GOOGLEALERTSHOOK
 	}
 	return hook
 }
