@@ -7,7 +7,10 @@ const defaultQueue = new ThrottledQueue({ concurrency: 1, interval: 1000, limit:
 export async function getDiscordWebhook(from: string, env: Env): Promise<string> {
 	await defaultQueue.add(async () => { })
 	let hook = env.DISCORDHOOK
-	if (from === 'noreply@github.com' || from.endsWith('@sgmail.github.com')) {
+	if (from === 'noreply@github.com'
+		|| from === 'notifications@github.com'
+		|| from.endsWith('@sgmail.github.com')
+	) {
 		hook = env.GITHUBHOOK
 	} else if (from === 'notifications@disqus.net') {
 		hook = env.DISQUSHOOK
