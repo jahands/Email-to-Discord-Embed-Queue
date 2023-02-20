@@ -68,6 +68,7 @@ async function sendDiscordEmbed(message: EmbedQueueData, env: Env, ctx: Executio
 		const discordResponse = await fetch(hook, {
 			method: "POST",
 			body: formData,
+			headers: getAuthHeader(env)
 		})
 		if (!discordResponse.ok) {
 			console.log("Discord Webhook Failed")
@@ -84,6 +85,7 @@ async function sendDiscordEmbed(message: EmbedQueueData, env: Env, ctx: Executio
 					await fetch(await getDiscordWebhook(message.from, env), {
 						method: "POST",
 						body: formData,
+						headers: getAuthHeader(env)
 					})
 				}
 			}
@@ -97,23 +99,23 @@ async function sendDiscordEmbed(message: EmbedQueueData, env: Env, ctx: Executio
 	}
 }
 
-// get ready for a big hack for how I'm rate-limiting per webhook here...
-const newQueue = () => new ThrottledQueue({ concurrency: 1, interval: 1000, limit: 1 });
-const defaultQueue = newQueue()
-const githubQueue = newQueue()
-const disqusQueue = newQueue()
+// Inject rate-limiting (this is not a great way to do this, but it works..)
+const defaultQueue = new ThrottledQueue({ concurrency: 1, interval: 500, limit: 1 });
 async function getDiscordWebhook(from: string, env: Env): Promise<string> {
+	await defaultQueue.add(async () => { })
 	let hook = env.DISCORDHOOK
 	if (from === 'noreply@github.com') {
-		await githubQueue.add(async () => { })
 		hook = env.GITHUBHOOK
 	} else if (from === 'notifications@disqus.net') {
-		await disqusQueue.add(async () => { })
 		hook = env.DISQUSHOOK
-	} else {
-		await defaultQueue.add(async () => { })
+	} else if (from.match(/^postmaster@mail[a-z0-9-]*\.google\.com$/)) {
+		hook = env.GERRITHOOK
 	}
 	return hook
+}
+
+function getAuthHeader(env: Env): { Authorization: string } {
+	return { Authorization: `Bot ${env.BOTTOKEN}` }
 }
 
 function sleep(ms: number) {

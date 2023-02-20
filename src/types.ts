@@ -13,7 +13,9 @@ export interface Env {
 	DISCORDHOOK: string
 	GITHUBHOOK: string
 	DISQUSHOOK: string
+	GERRITHOOK: string
 	R2EMAILS: R2Bucket
+	BOTTOKEN: string // Discord bot token to improve ratelimits
 }
 
 /** Synced with https://replit.com/@jachands/Email-Worker-Github#src/types.ts */
