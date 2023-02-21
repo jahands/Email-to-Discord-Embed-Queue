@@ -31,7 +31,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 
 			env.EMBEDSTATS.writeDataPoint({
 				blobs: [discordHookName],
-				doubles: [embeds.length, nextSize],
+				doubles: [embeds.length, nextSize, 1], // 1 = count total api calls
 				indexes: [discordHookName]
 			})
 
@@ -44,7 +44,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 
 		env.EMBEDSTATS.writeDataPoint({
 			blobs: [discordHookName],
-			doubles: [embeds.length, nextSize],
+			doubles: [embeds.length, nextSize, 1],
 			indexes: [discordHookName]
 		})
 	}
@@ -90,7 +90,9 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 						const idx = parseInt(embed) // Index of bad embed
 						console.log(`Bad embed at index ${idx}`)
 						console.log(embeds[idx])
-					} catch { }
+					} catch {
+						console.log('unable to parse embed index')
+					}
 				}
 			}
 		}
