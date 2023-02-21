@@ -125,12 +125,12 @@ function createEmbedBody(emailText: string, subject: string, to: string, from: s
 
 	const timestamp = `<t:${Math.round((ts || new Date().getTime()) / 1000)}:f>`
 	const timestampLength = timestamp.length + 1 // +1 for the newline we may need to prefix
-
+	const trimmedMessage = ' ...(TRIMMED)'
 	let description = emailText
 	if ((emailText.length + sizeWithoutDescription + timestampLength) > DISCORD_EMBED_LIMIT) {
-		description = `${emailText.substring(0,
-			DISCORD_EMBED_LIMIT - 12 - sizeWithoutDescription - timestampLength
-		)}...(TRIMMED)`
+		description = emailText.substring(0,
+			DISCORD_EMBED_LIMIT - trimmedMessage.length - sizeWithoutDescription - timestampLength
+		) + trimmedMessage
 	}
 	if (!description.endsWith('\n')) {
 		description += '\n'
