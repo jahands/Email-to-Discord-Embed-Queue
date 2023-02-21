@@ -18,18 +18,27 @@ export interface Env {
 	R2EMAILS: R2Bucket
 	BOTTOKEN: string // Discord bot token to improve ratelimits
 	EMBEDSTATS: AnalyticsEngineDataset
+	ENVIRONMENT: string
+	LOGTAIL_KEY: string
 }
 
 /** Synced with https://replit.com/@jachands/Email-Worker-Github#src/types.ts */
 export interface EmbedQueueData {
-  /** Envelope From attribute of the email message. */
-  from: string
-  /** Envelope To attribute of the email message. */
-  to: string
-  /** Subject of email */
-  subject: string
+	/** Envelope From attribute of the email message. */
+	from: string
+	/** Envelope To attribute of the email message. */
+	to: string
+	/** Subject of email */
+	subject: string
 	/** Path to raw email in R2 bucket */
 	r2path: string
 	/** timestamp of the message */
 	ts: number
+}
+
+export enum LogLevel {
+	Debug = "debug",
+	Info = "info",
+	Warn = "warn",
+	Error = "error"
 }

@@ -4,8 +4,9 @@ import { convert as convertHTML } from 'html-to-text';
 import { ThrottledQueue } from '@jahands/msc-utils'
 
 import { DISCORD_EMBED_LIMIT, DISCORD_TOTAL_LIMIT } from "./constants"
-import { EmbedQueueData, Env } from './types'
+import { EmbedQueueData, Env, LogLevel } from './types'
 import { getAuthHeader, sleep } from "./utils"
+import { logtail } from "./logtail";
 
 /** Sends multiple embeds with no .txt fallback */
 export async function sendDiscordEmbeds(messages: EmbedQueueData[],
@@ -80,6 +81,14 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 		if (discordResponse.status === 429) {
 			const body = await discordResponse.json() as { retry_after: number | undefined }
 			console.log(body)
+			await logtail({
+				env, msg: JSON.stringify(body),
+				level: LogLevel.Error,
+				data: {
+					discordHook: hook,
+					discordResponse: body
+				}
+			})
 			if (body.retry_after) {
 				console.log('sleeping...')
 				await sleep(body.retry_after * 1000)
@@ -89,16 +98,37 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 		} else if (discordResponse.status === 400) {
 			const body = await discordResponse.json() as any
 			console.log(body)
+			let logged = false
 			if (Array.isArray(body.embeds)) {
 				for (const embed of body.embeds) {
 					try {
 						const idx = parseInt(embed) // Index of bad embed
 						console.log(`Bad embed at index ${idx}`)
 						console.log(embeds[idx])
+						await logtail({
+							env, msg: `Bad embed at index ${idx} - ` + JSON.stringify(body),
+							level: LogLevel.Error,
+							data: {
+								discordHook: hook,
+								embed: embeds[idx],
+								discordResponse: body
+							}
+						})
+						logged = true
 					} catch {
 						console.log('unable to parse embed index')
 					}
 				}
+			}
+			if (!logged) {
+				await logtail({
+					env, msg: JSON.stringify(body),
+					level: LogLevel.Error,
+					data: {
+						discordHook: hook,
+						discordResponse: body
+					}
+				})
 			}
 		}
 	}

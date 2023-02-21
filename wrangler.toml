@@ -4,6 +4,9 @@ compatibility_date = "2023-02-20"
 usage_model = "unbound"
 workers_dev = false
 
+[vars]
+ENVIRONMENT = "production"
+
 analytics_engine_datasets = [
 	{ binding = "EMBEDSTATS", dataset = "DISCORD_EMAIL_EMBEDS" },
 ]
