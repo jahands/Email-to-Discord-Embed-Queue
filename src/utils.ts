@@ -1,11 +1,6 @@
-import { ThrottledQueue } from '@jahands/msc-utils'
 import { Env } from './types'
 
-// Inject rate-limiting (this is not a great way to do this, but it works..)
-const defaultQueue = new ThrottledQueue({ concurrency: 1, interval: 1000, limit: 1 });
-
 export async function getDiscordWebhook(from: string, env: Env): Promise<string> {
-	await defaultQueue.add(async () => { })
 	let hook = env.DISCORDHOOK
 	if (from === 'noreply@github.com'
 		|| from === 'notifications@github.com'

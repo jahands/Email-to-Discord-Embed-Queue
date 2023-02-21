@@ -1,3 +1,5 @@
+import { ThrottledQueue } from '@jahands/msc-utils'
+
 // @ts-ignore no @types :(
 import PostalMime from "postal-mime"
 import { DISCORD_EMBED_LIMIT, DISCORD_TOTAL_LIMIT } from "./constants"
@@ -16,7 +18,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[], discordHook:
 		const arrayBuffer = await rawEmail.arrayBuffer()
 		const parser = new PostalMime()
 		const email = await parser.parse(arrayBuffer)
-		const embed = createEmbedBody(email.text, message.subject, message.to, message.from)
+		const embed = createEmbedBody(email.text, message.subject, message.to, message.from, message.ts)
 		if (nextSize + embed.size < DISCORD_TOTAL_LIMIT) {
 			embeds.push(embed.embed)
 			nextSize += embed.size
@@ -33,16 +35,23 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[], discordHook:
 	}
 }
 
+
+const throttledQueue = new ThrottledQueue({ concurrency: 1, interval: 1000, limit: 1 });
+
 async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
+	console.log(`Sending ${embeds.length} embeds at ${new Date().toISOString()}...`)
 	// Send the embeds
 	const embedBody = JSON.stringify({ embeds })
 	const formData = new FormData()
 	formData.append("payload_json", embedBody)
-	const sendHook = async () => fetch(hook, {
-		method: "POST",
-		body: formData,
-		headers: getAuthHeader(env)
-	})
+	const sendHook = async () => {
+		await throttledQueue.add(async () => { }) // Rate limit ourselves
+		return fetch(hook, {
+			method: "POST",
+			body: formData,
+			headers: getAuthHeader(env)
+		})
+	}
 	const discordResponse = await sendHook()
 	if (!discordResponse.ok) {
 		console.log("Discord Webhook Failed")
@@ -62,27 +71,39 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 	}
 }
 
-function createEmbedBody(emailText: string, subject: string, to: string, from: string) {
+function createEmbedBody(emailText: string, subject: string, to: string, from: string, ts: number) {
+	const footer = `This email was sent to ${to}`
+	const author = from
+	const title = subject
+	const sizeWithoutDescription = title.length +
+		author.length +
+		footer.length
+
+	// Remove excessive newlines and append timestamp
+	const emailTextFixed = (emailText
+		+ `\n<t:${Math.round((ts || new Date().getTime()) / 1000)}:f>`
+	).replace(/\n\s*\n/g, '\n\n')
+
 	const embed = {
-		title: `${subject}`,
+		title: title,
 		description:
-			emailText.length > DISCORD_EMBED_LIMIT
-				? `${emailText.substring(
+			emailTextFixed.length + sizeWithoutDescription > DISCORD_EMBED_LIMIT
+				? `${emailTextFixed.substring(
 					0,
 					DISCORD_EMBED_LIMIT - 12
 				)}...(TRIMMED)`
-				: emailText,
+				: emailTextFixed,
 		author: {
-			name: from,
+			name: author,
 		},
 		footer: {
-			text: `This email was sent to ${to}`,
+			text: footer,
 		},
 	}
-	const size = embed.title.length +
+	const size = title.length +
 		embed.description.length +
-		embed.author.name.length +
-		embed.footer.text.length
+		author.length +
+		footer.length
 	return { embed, size }
 }
 
