@@ -26,7 +26,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 			text = convertHTML(email.html)
 		}
 		const embed = createEmbedBody(text, message.subject, message.to, message.from, message.ts)
-		if (nextSize + embed.size >= DISCORD_TOTAL_LIMIT || embeds.length >= 10) {
+		if (nextSize + embed.size > DISCORD_TOTAL_LIMIT || embeds.length >= 10) {
 			await sendHookWithEmbeds(env, discordHook, embeds)
 
 			env.EMBEDSTATS.writeDataPoint({
