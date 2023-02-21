@@ -67,6 +67,8 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 				// retry and giveup if it fails again
 				await sendHook()
 			}
+		} else if (discordResponse.status === 400) {
+			console.log(await discordResponse.json())
 		}
 	}
 }
