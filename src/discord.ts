@@ -20,7 +20,8 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		const parser = new PostalMime()
 		const email = await parser.parse(arrayBuffer)
 		const embed = createEmbedBody(email.text, message.subject, message.to, message.from, message.ts)
-		if (nextSize + embed.size < DISCORD_TOTAL_LIMIT) {
+		if (nextSize + embed.size < DISCORD_TOTAL_LIMIT
+			&& embeds.length < 10) {
 			embeds.push(embed.embed)
 			nextSize += embed.size
 		} else {
