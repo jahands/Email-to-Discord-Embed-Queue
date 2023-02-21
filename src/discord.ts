@@ -130,7 +130,7 @@ function createEmbedBody(emailText: string, subject: string, to: string, from: s
 	if ((emailText.length + sizeWithoutDescription + timestampLength) > DISCORD_EMBED_LIMIT) {
 		description = emailText.substring(0,
 			DISCORD_EMBED_LIMIT - trimmedMessage.length - sizeWithoutDescription - timestampLength
-		) + trimmedMessage
+		).trim() + trimmedMessage
 	}
 	if (!description.endsWith('\n')) {
 		description += '\n'
