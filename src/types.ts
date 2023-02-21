@@ -17,6 +17,7 @@ export interface Env {
 	GOOGLEALERTSHOOK: string
 	R2EMAILS: R2Bucket
 	BOTTOKEN: string // Discord bot token to improve ratelimits
+	EMBEDSTATS: AnalyticsEngineDataset
 }
 
 /** Synced with https://replit.com/@jachands/Email-Worker-Github#src/types.ts */

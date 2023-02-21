@@ -1,20 +1,19 @@
 import { Env } from './types'
 
-export async function getDiscordWebhook(from: string, env: Env): Promise<string> {
-	let hook = env.DISCORDHOOK
+export async function getDiscordWebhook(from: string, env: Env): Promise<{name: string, hook: string}> {
 	if (from === 'noreply@github.com'
 		|| from === 'notifications@github.com'
 		|| from.endsWith('@sgmail.github.com')
 	) {
-		hook = env.GITHUBHOOK
+		return {hook: env.GITHUBHOOK, name: 'github'}
 	} else if (from === 'notifications@disqus.net') {
-		hook = env.DISQUSHOOK
+		return {hook: env.DISQUSHOOK, name: 'disqus'}
 	} else if (from.match(/^postmaster@mail[a-z0-9-]*\.google\.com$/)) {
-		hook = env.GERRITHOOK
+		return {hook: env.GERRITHOOK, name: 'gerrit'}
 	} else if (from.endsWith('@alerts.bounces.google.com')) {
-		hook = env.GOOGLEALERTSHOOK
+		return { hook: env.GOOGLEALERTSHOOK, name: 'google_alerts' }
 	}
-	return hook
+	return {hook: env.DISCORDHOOK, name: 'default'}
 }
 
 export function getAuthHeader(env: Env): { Authorization: string } {

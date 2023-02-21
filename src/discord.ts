@@ -7,7 +7,8 @@ import { EmbedQueueData, Env } from './types'
 import { getAuthHeader, sleep } from "./utils"
 
 /** Sends multiple embeds with no .txt fallback */
-export async function sendDiscordEmbeds(messages: EmbedQueueData[], discordHook: string, env: Env, ctx: ExecutionContext) {
+export async function sendDiscordEmbeds(messages: EmbedQueueData[],
+	discordHook: string, discordHookName: string, env: Env, ctx: ExecutionContext) {
 	let nextSize = 0 // max = DISCORD_TOTAL_LIMIT
 	let embeds = []
 	for (const message of messages) {
@@ -26,12 +27,25 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[], discordHook:
 			// Send using the first message as the from. Hopefully messages are separated
 			// before it makes it to sendDiscordEmbeds()
 			await sendHookWithEmbeds(env, discordHook, embeds)
+
+			env.EMBEDSTATS.writeDataPoint({
+				blobs: [discordHookName],
+				doubles: [embeds.length, nextSize],
+				indexes: [discordHookName]
+			})
+
 			nextSize = 0
 			embeds = []
 		}
 	}
 	if (embeds.length > 0) {
 		await sendHookWithEmbeds(env, discordHook, embeds)
+
+		env.EMBEDSTATS.writeDataPoint({
+			blobs: [discordHookName],
+			doubles: [embeds.length, nextSize],
+			indexes: [discordHookName]
+		})
 	}
 }
 
@@ -39,7 +53,6 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[], discordHook:
 const throttledQueue = new ThrottledQueue({ concurrency: 1, interval: 1000, limit: 1 });
 
 async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
-	console.log(`Sending ${embeds.length} embeds at ${new Date().toISOString()}...`)
 	// Send the embeds
 	const embedBody = JSON.stringify({ embeds })
 	const formData = new FormData()
@@ -82,7 +95,7 @@ function createEmbedBody(emailText: string, subject: string, to: string, from: s
 		footer.length
 
 	// Remove excessive newlines and append timestamp
-	const emailTextFixed = (emailText + (emailText.endsWith('\n') ? '' : '\n')
+	const emailTextFixed = (emailText + ((emailText || '').endsWith('\n') ? '' : '\n')
 		+ `<t:${Math.round((ts || new Date().getTime()) / 1000)}:f>`
 	).replace(/\n\s*\n/g, '\n\n')
 

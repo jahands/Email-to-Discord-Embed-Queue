@@ -4,6 +4,10 @@ compatibility_date = "2023-02-20"
 usage_model = "unbound"
 workers_dev = false
 
+analytics_engine_datasets = [
+	{ binding = "EMBEDSTATS", dataset = "DISCORD_EMAIL_EMBEDS" },
+]
+
 [[r2_buckets]]
 binding = "R2EMAILS" # <~ valid JavaScript variable name
 bucket_name = "eemailme"
