@@ -4,9 +4,9 @@ import { convert as convertHTML } from 'html-to-text';
 import { ThrottledQueue } from '@jahands/msc-utils'
 
 import { DISCORD_EMBED_LIMIT, DISCORD_TOTAL_LIMIT } from "./constants"
-import { EmbedQueueData, Env, LogLevel } from './types'
+import { EmbedQueueData, Env } from './types'
 import { getAuthHeader, sleep } from "./utils"
-import { logtail } from "./logtail";
+import { logtail, LogLevel } from "./logtail";
 
 /** Sends multiple embeds with no .txt fallback */
 export async function sendDiscordEmbeds(messages: EmbedQueueData[],

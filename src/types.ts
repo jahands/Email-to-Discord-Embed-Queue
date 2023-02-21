@@ -35,10 +35,3 @@ export interface EmbedQueueData {
 	/** timestamp of the message */
 	ts: number
 }
-
-export enum LogLevel {
-	Debug = "debug",
-	Info = "info",
-	Warn = "warn",
-	Error = "error"
-}

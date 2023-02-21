@@ -1,4 +1,4 @@
-import { Env, LogLevel } from "./types"
+import { Env } from "./types"
 
 /** logtail sends logs to logtail.com */
 export async function logtail(args: { env: Env, msg: string, level?: LogLevel, data?: any }) {
@@ -18,4 +18,11 @@ export async function logtail(args: { env: Env, msg: string, level?: LogLevel, d
 				...data
 			})
 		})
+}
+
+export enum LogLevel {
+	Debug = "debug",
+	Info = "info",
+	Warn = "warn",
+	Error = "error"
 }
