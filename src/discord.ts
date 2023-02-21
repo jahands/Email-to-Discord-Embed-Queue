@@ -27,8 +27,6 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		}
 		const embed = createEmbedBody(text, message.subject, message.to, message.from, message.ts)
 		if (nextSize + embed.size > DISCORD_TOTAL_LIMIT || embeds.length >= 10) {
-			// Send using the first message as the from. Hopefully messages are separated
-			// before it makes it to sendDiscordEmbeds()
 			await sendHookWithEmbeds(env, discordHook, embeds)
 
 			env.EMBEDSTATS.writeDataPoint({
