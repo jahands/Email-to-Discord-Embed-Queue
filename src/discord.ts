@@ -82,7 +82,17 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 				await sendHook()
 			}
 		} else if (discordResponse.status === 400) {
-			console.log(await discordResponse.json())
+			const body = await discordResponse.json() as any
+			console.log(body)
+			if (Array.isArray(body.embeds)) {
+				for (const embed of body.embeds) {
+					try {
+						const idx = parseInt(embed) // Index of bad embed
+						console.log(`Bad embed at index ${idx}`)
+						console.log(embeds[idx])
+					} catch { }
+				}
+			}
 		}
 	}
 }
