@@ -1,7 +1,8 @@
-import { ThrottledQueue } from '@jahands/msc-utils'
-
 // @ts-ignore no @types :(
 import PostalMime from "postal-mime"
+import { convert as convertHTML } from 'html-to-text';
+import { ThrottledQueue } from '@jahands/msc-utils'
+
 import { DISCORD_EMBED_LIMIT, DISCORD_TOTAL_LIMIT } from "./constants"
 import { EmbedQueueData, Env } from './types'
 import { getAuthHeader, sleep } from "./utils"
@@ -19,7 +20,11 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		const arrayBuffer = await rawEmail.arrayBuffer()
 		const parser = new PostalMime()
 		const email = await parser.parse(arrayBuffer)
-		const embed = createEmbedBody(email.text, message.subject, message.to, message.from, message.ts)
+		let text = email.text
+		if (!text) {
+			text = convertHTML(email.html)
+		}
+		const embed = createEmbedBody(text, message.subject, message.to, message.from, message.ts)
 		if (nextSize + embed.size < DISCORD_TOTAL_LIMIT
 			&& embeds.length < 10) {
 			embeds.push(embed.embed)
