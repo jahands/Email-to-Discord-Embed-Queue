@@ -90,7 +90,7 @@ function createEmbedBody(emailText: string, subject: string, to: string, from: s
 			emailTextFixed.length + sizeWithoutDescription > DISCORD_EMBED_LIMIT
 				? `${emailTextFixed.substring(
 					0,
-					DISCORD_EMBED_LIMIT - 12
+					DISCORD_EMBED_LIMIT - 12 - sizeWithoutDescription
 				)}...(TRIMMED)`
 				: emailTextFixed,
 		author: {
