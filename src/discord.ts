@@ -80,8 +80,8 @@ function createEmbedBody(emailText: string, subject: string, to: string, from: s
 		footer.length
 
 	// Remove excessive newlines and append timestamp
-	const emailTextFixed = (emailText
-		+ `\n<t:${Math.round((ts || new Date().getTime()) / 1000)}:f>`
+	const emailTextFixed = (emailText + (emailText.endsWith('\n') ? '' : '\n')
+		+ `<t:${Math.round((ts || new Date().getTime()) / 1000)}:f>`
 	).replace(/\n\s*\n/g, '\n\n')
 
 	const embed = {
