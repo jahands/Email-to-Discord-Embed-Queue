@@ -107,15 +107,23 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 function createEmbedBody(emailText: string, subject: string, to: string, from: string, ts: number) {
 	const footer = `This email was sent to ${to}`
 	const author = from
-	const title = subject
+
+	// Add timestamp to the end of the email text
+	let emailTextFixed = (emailText + ((emailText || '').endsWith('\n') ? '' : '\n')
+		+ `<t:${Math.round((ts || new Date().getTime()) / 1000)}:f>`)
+	let title = subject
+
+	if (title.length > 256) {
+		// Truncate title and add to description
+		emailTextFixed = title.substring(256) + '\n\n' + emailTextFixed
+		title = title.substring(0, 253) + '...'
+	}
+
+	// Remove excessive newlines
+	emailTextFixed = emailTextFixed.replace(/\n\s*\n/g, '\n\n')
 	const sizeWithoutDescription = title.length +
 		author.length +
 		footer.length
-
-	// Remove excessive newlines and append timestamp
-	const emailTextFixed = (emailText + ((emailText || '').endsWith('\n') ? '' : '\n')
-		+ `<t:${Math.round((ts || new Date().getTime()) / 1000)}:f>`
-	).replace(/\n\s*\n/g, '\n\n')
 
 	const embed = {
 		title: title,
