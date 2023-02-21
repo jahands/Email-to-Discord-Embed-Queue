@@ -109,31 +109,37 @@ function createEmbedBody(emailText: string, subject: string, to: string, from: s
 	const author = from
 
 	// Add timestamp to the end of the email text
-	let emailTextFixed = (emailText + ((emailText || '').endsWith('\n') ? '' : '\n')
-		+ `<t:${Math.round((ts || new Date().getTime()) / 1000)}:f>`)
 	let title = subject
 
 	if (title.length > 256) {
 		// Truncate title and add to description
-		emailTextFixed = title.substring(256) + '\n\n' + emailTextFixed
+		emailText = title.substring(256) + '\n\n' + emailText
 		title = title.substring(0, 253) + '...'
 	}
 
 	// Remove excessive newlines
-	emailTextFixed = emailTextFixed.replace(/\n\s*\n/g, '\n\n')
+	emailText = emailText.replace(/\n\s*\n/g, '\n\n')
 	const sizeWithoutDescription = title.length +
 		author.length +
 		footer.length
 
+	const timestamp = `<t:${Math.round((ts || new Date().getTime()) / 1000)}:f>`
+	const timestampLength = timestamp.length + 1 // +1 for the newline we may need to prefix
+
+	let description = emailText
+	if ((emailText.length + sizeWithoutDescription + timestampLength) > DISCORD_EMBED_LIMIT) {
+		description = `${emailText.substring(0,
+			DISCORD_EMBED_LIMIT - 12 - sizeWithoutDescription - timestampLength
+		)}...(TRIMMED)`
+	}
+	if (!description.endsWith('\n')) {
+		description += '\n'
+	}
+	description += timestamp
+
 	const embed = {
-		title: title,
-		description:
-			emailTextFixed.length + sizeWithoutDescription > DISCORD_EMBED_LIMIT
-				? `${emailTextFixed.substring(
-					0,
-					DISCORD_EMBED_LIMIT - 12 - sizeWithoutDescription
-				)}...(TRIMMED)`
-				: emailTextFixed,
+		title,
+		description,
 		author: {
 			name: author,
 		},
