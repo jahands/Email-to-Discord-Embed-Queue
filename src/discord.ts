@@ -15,6 +15,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	let embeds = []
 	let totalEmbeds = 0
 	let totalAPICalls = 0
+	let totalSize = 0
 	for (const message of messages) {
 		const rawEmail = await env.R2EMAILS.get(message.r2path)
 		if (!rawEmail) {
@@ -33,6 +34,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 
 			totalEmbeds += embeds.length
 			totalAPICalls += 1
+			totalSize += nextSize
 
 			nextSize = 0
 			embeds = []
@@ -46,10 +48,11 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 
 		totalEmbeds += embeds.length
 		totalAPICalls += 1
+		totalSize += nextSize
 	}
 	env.EMBEDSTATS.writeDataPoint({
 		blobs: [discordHookName],
-		doubles: [totalEmbeds, nextSize, totalAPICalls],
+		doubles: [totalEmbeds, totalSize, totalAPICalls],
 		indexes: [discordHookName]
 	})
 }
