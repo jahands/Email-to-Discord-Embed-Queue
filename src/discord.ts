@@ -13,6 +13,8 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	discordHook: string, discordHookName: string, env: Env, ctx: ExecutionContext) {
 	let nextSize = 0 // max = DISCORD_TOTAL_LIMIT
 	let embeds = []
+	let totalEmbeds = 0
+	let totalAPICalls = 0
 	for (const message of messages) {
 		const rawEmail = await env.R2EMAILS.get(message.r2path)
 		if (!rawEmail) {
@@ -29,11 +31,8 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		if (nextSize + embed.size > DISCORD_TOTAL_LIMIT || embeds.length >= 10) {
 			await sendHookWithEmbeds(env, discordHook, embeds)
 
-			env.EMBEDSTATS.writeDataPoint({
-				blobs: [discordHookName],
-				doubles: [embeds.length, nextSize, 1], // 1 = count total api calls
-				indexes: [discordHookName]
-			})
+			totalEmbeds += embeds.length
+			totalAPICalls += 1
 
 			nextSize = 0
 			embeds = []
@@ -45,12 +44,14 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	if (embeds.length > 0) {
 		await sendHookWithEmbeds(env, discordHook, embeds)
 
-		env.EMBEDSTATS.writeDataPoint({
-			blobs: [discordHookName],
-			doubles: [embeds.length, nextSize, 1],
-			indexes: [discordHookName]
-		})
+		totalEmbeds += embeds.length
+		totalAPICalls += 1
 	}
+	env.EMBEDSTATS.writeDataPoint({
+		blobs: [discordHookName],
+		doubles: [totalEmbeds, nextSize, totalAPICalls],
+		indexes: [discordHookName]
+	})
 }
 
 
