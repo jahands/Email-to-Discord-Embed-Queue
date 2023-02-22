@@ -50,11 +50,26 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		totalAPICalls += 1
 		totalSize += nextSize
 	}
-	env.EMBEDSTATS.writeDataPoint({
-		blobs: [discordHookName],
-		doubles: [totalEmbeds, totalSize, totalAPICalls],
-		indexes: [discordHookName]
-	})
+	try {
+		env.EMBEDSTATS.writeDataPoint({
+			blobs: [discordHookName],
+			doubles: [totalEmbeds, totalSize, totalAPICalls],
+			indexes: [discordHookName]
+		})
+	} catch (e) {
+		if (e instanceof Error) {
+			await logtail({
+				env, msg: e.message,
+				level: LogLevel.Error,
+				data: {
+					error: {
+						message: e.message,
+						stack: e.stack
+					},
+				}
+			})
+		}
+	}
 }
 
 
