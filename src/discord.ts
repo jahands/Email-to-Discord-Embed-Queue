@@ -92,7 +92,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 	// Try to preimptively ratelimit if needed
 	try {
 		const rateLimitRemaining = discordResponse.headers.get('X-RateLimit-Remaining')
-		if (rateLimitRemaining && parseInt(rateLimitRemaining) === 0) {
+		if (rateLimitRemaining && parseInt(rateLimitRemaining) <= 0) {
 			const rateLimitResetAfter = discordResponse.headers.get('X-RateLimit-Reset-After')
 			if (rateLimitResetAfter) {
 				const resetAfter = parseInt(rateLimitResetAfter)
