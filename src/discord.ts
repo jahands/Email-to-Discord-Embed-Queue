@@ -73,7 +73,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 }
 
 
-const throttledQueue = new ThrottledQueue({ concurrency: 1, interval: 1000, limit: 1 });
+const throttledQueue = new ThrottledQueue({ concurrency: 1, interval: 1200, limit: 1 });
 
 async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 	// Send the embeds
@@ -108,8 +108,18 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 			if (body.retry_after) {
 				console.log('sleeping...')
 				await sleep(body.retry_after * 1000)
-				// retry and giveup if it fails again
-				await sendHook()
+				// retry and give up if it fails again
+				const retryResponse = await sendHook()
+				if (!retryResponse.ok) {
+					await logtail({
+						env, msg: `Failed after 1 retry, giving up: ${JSON.stringify(body)}`,
+						level: LogLevel.Error,
+						data: {
+							discordHook: hook,
+							discordResponse: body
+						}
+					})
+				}
 			}
 		} else if (discordResponse.status === 400) {
 			const body = await discordResponse.json() as any
