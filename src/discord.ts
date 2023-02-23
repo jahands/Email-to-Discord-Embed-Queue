@@ -89,6 +89,39 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 		})
 	}
 	const discordResponse = await sendHook()
+	// Try to preimptively ratelimit if needed
+	try {
+		const rateLimitRemaining = discordResponse.headers.get('X-RateLimit-Remaining')
+		if (rateLimitRemaining && parseInt(rateLimitRemaining) === 0) {
+			const rateLimitResetAfter = discordResponse.headers.get('X-RateLimit-Reset-After')
+			if (rateLimitResetAfter) {
+				const resetAfter = parseInt(rateLimitResetAfter)
+				if (resetAfter > 0) {
+					await sleep(resetAfter * 1000)
+				}
+			}
+		}
+	} catch (e) {
+		if (e instanceof Error) {
+			await logtail({
+				env, msg: `Failed to preimptively avoid ratelimits: ${e.message}`,
+				level: LogLevel.Error,
+				data: {
+					error: {
+						message: e.message,
+						stack: e.stack
+					}
+				}
+			})
+		}
+	}
+	// Log all headers:
+	// console.log('X-RateLimit-Limit', discordResponse.headers.get('X-RateLimit-Limit'))
+	// console.log('X-RateLimit-Remaining', discordResponse.headers.get('X-RateLimit-Remaining'))
+	// console.log('X-RateLimit-Reset', discordResponse.headers.get('X-RateLimit-Reset'))
+	// console.log('X-RateLimit-Reset-After', discordResponse.headers.get('X-RateLimit-Reset-After'))
+	// console.log('X-RateLimit-Bucket', discordResponse.headers.get('X-RateLimit-Bucket'))
+
 	if (!discordResponse.ok) {
 		console.log("Discord Webhook Failed")
 		console.log(
