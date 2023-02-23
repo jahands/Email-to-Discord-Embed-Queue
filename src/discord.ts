@@ -73,7 +73,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 }
 
 
-const throttledQueue = new ThrottledQueue({ concurrency: 1, interval: 1200, limit: 1 });
+const throttledQueue = new ThrottledQueue({ concurrency: 1, interval: 1000, limit: 1 });
 
 async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 	// Send the embeds
