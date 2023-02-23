@@ -30,7 +30,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		}
 		const embed = createEmbedBody(text, message.subject, message.to, message.from, message.ts)
 		if (nextSize + embed.size > DISCORD_TOTAL_LIMIT || embeds.length >= 10) {
-			await sendHookWithEmbeds(env, discordHook, embeds)
+			await sendHookWithEmbeds(env, ctx, discordHook, embeds)
 
 			totalEmbeds += embeds.length
 			totalAPICalls += 1
@@ -44,7 +44,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		nextSize += embed.size
 	}
 	if (embeds.length > 0) {
-		await sendHookWithEmbeds(env, discordHook, embeds)
+		await sendHookWithEmbeds(env, ctx, discordHook, embeds)
 
 		totalEmbeds += embeds.length
 		totalAPICalls += 1
@@ -75,7 +75,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 // Turning off throttling for now because we have proper rate limit handling
 const throttledQueue = new ThrottledQueue({ concurrency: 1, interval: 0, limit: 1 });
 
-async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
+async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string, embeds: any[]) {
 	// Send the embeds
 	const embedBody = JSON.stringify({ embeds })
 	const formData = new FormData()
@@ -98,13 +98,26 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 				const resetAfter = parseInt(rateLimitResetAfter)
 				if (resetAfter > 0) {
 					console.log(`Ratelimited! Sleeping for ${resetAfter} seconds...`)
+					ctx.waitUntil(logtail({
+						env, msg: `Ratelimited! Sleeping for ${resetAfter} seconds...`,
+						level: LogLevel.Info,
+						data: {
+							discordResponseHeaders: {
+								'X-RateLimit-Limit': discordResponse.headers.get('X-RateLimit-Limit'),
+								'X-RateLimit-Remaining': discordResponse.headers.get('X-RateLimit-Remaining'),
+								'X-RateLimit-Reset': discordResponse.headers.get('X-RateLimit-Reset'),
+								'X-RateLimit-Reset-After': discordResponse.headers.get('X-RateLimit-Reset-After'),
+								'X-RateLimit-Bucket': discordResponse.headers.get('X-RateLimit-Bucket'),
+							}
+						}
+					}))
 					await sleep(resetAfter * 1000)
 				}
 			}
 		}
 	} catch (e) {
 		if (e instanceof Error) {
-			await logtail({
+			ctx.waitUntil(logtail({
 				env, msg: `Failed to preimptively avoid ratelimits: ${e.message}`,
 				level: LogLevel.Error,
 				data: {
@@ -113,7 +126,7 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 						stack: e.stack
 					}
 				}
-			})
+			}))
 		}
 	}
 	// Log all headers:
@@ -131,28 +144,28 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 		if (discordResponse.status === 429) {
 			const body = await discordResponse.json() as { retry_after: number | undefined }
 			console.log(body)
-			await logtail({
+			ctx.waitUntil(logtail({
 				env, msg: JSON.stringify(body),
 				level: LogLevel.Error,
 				data: {
 					discordHook: hook,
 					discordResponse: body
 				}
-			})
+			}))
 			if (body.retry_after) {
 				console.log('sleeping...')
 				await sleep(body.retry_after * 1000)
 				// retry and give up if it fails again
 				const retryResponse = await sendHook()
 				if (!retryResponse.ok) {
-					await logtail({
+					ctx.waitUntil(logtail({
 						env, msg: `Failed after 1 retry, giving up: ${JSON.stringify(body)}`,
 						level: LogLevel.Error,
 						data: {
 							discordHook: hook,
 							discordResponse: body
 						}
-					})
+					}))
 				}
 			}
 		} else if (discordResponse.status === 400) {
@@ -165,7 +178,7 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 						const idx = parseInt(embed) // Index of bad embed
 						console.log(`Bad embed at index ${idx}`)
 						console.log(embeds[idx])
-						await logtail({
+						ctx.waitUntil(logtail({
 							env, msg: `Bad embed at index ${idx} - ` + JSON.stringify(body),
 							level: LogLevel.Error,
 							data: {
@@ -173,7 +186,7 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 								embed: embeds[idx],
 								discordResponse: body
 							}
-						})
+						}))
 						logged = true
 					} catch {
 						console.log('unable to parse embed index')
@@ -181,14 +194,14 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 				}
 			}
 			if (!logged) {
-				await logtail({
+				ctx.waitUntil(logtail({
 					env, msg: JSON.stringify(body),
 					level: LogLevel.Error,
 					data: {
 						discordHook: hook,
 						discordResponse: body
 					}
-				})
+				}))
 			}
 		}
 	}
