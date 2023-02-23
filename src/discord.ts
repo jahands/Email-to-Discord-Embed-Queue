@@ -1,7 +1,7 @@
 // @ts-ignore no @types :(
 import PostalMime from "postal-mime"
 import { convert as convertHTML } from 'html-to-text';
-import { ThrottledQueue } from '@jahands/msc-utils'
+// import { ThrottledQueue } from '@jahands/msc-utils'
 
 import { DISCORD_EMBED_LIMIT, DISCORD_TOTAL_LIMIT } from "./constants"
 import { EmbedQueueData, Env } from './types'
