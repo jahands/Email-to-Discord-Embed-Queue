@@ -97,6 +97,7 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 			if (rateLimitResetAfter) {
 				const resetAfter = parseInt(rateLimitResetAfter)
 				if (resetAfter > 0) {
+					console.log(`Ratelimited! Sleeping for ${resetAfter} seconds...`)
 					await sleep(resetAfter * 1000)
 				}
 			}
