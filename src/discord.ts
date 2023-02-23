@@ -72,8 +72,8 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	}
 }
 
-
-const throttledQueue = new ThrottledQueue({ concurrency: 1, interval: 250, limit: 1 });
+// Turning off throttling for now because we have proper rate limit handling
+const throttledQueue = new ThrottledQueue({ concurrency: 1, interval: 0, limit: 1 });
 
 async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 	// Send the embeds
@@ -117,11 +117,11 @@ async function sendHookWithEmbeds(env: Env, hook: string, embeds: any[]) {
 		}
 	}
 	// Log all headers:
-	// console.log('X-RateLimit-Limit', discordResponse.headers.get('X-RateLimit-Limit'))
-	// console.log('X-RateLimit-Remaining', discordResponse.headers.get('X-RateLimit-Remaining'))
-	// console.log('X-RateLimit-Reset', discordResponse.headers.get('X-RateLimit-Reset'))
-	// console.log('X-RateLimit-Reset-After', discordResponse.headers.get('X-RateLimit-Reset-After'))
-	// console.log('X-RateLimit-Bucket', discordResponse.headers.get('X-RateLimit-Bucket'))
+	console.log('X-RateLimit-Limit', discordResponse.headers.get('X-RateLimit-Limit'))
+	console.log('X-RateLimit-Remaining', discordResponse.headers.get('X-RateLimit-Remaining'))
+	console.log('X-RateLimit-Reset', discordResponse.headers.get('X-RateLimit-Reset'))
+	console.log('X-RateLimit-Reset-After', discordResponse.headers.get('X-RateLimit-Reset-After'))
+	console.log('X-RateLimit-Bucket', discordResponse.headers.get('X-RateLimit-Bucket'))
 
 	if (!discordResponse.ok) {
 		console.log("Discord Webhook Failed")
