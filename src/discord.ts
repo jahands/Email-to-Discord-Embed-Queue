@@ -73,7 +73,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 }
 
 // Turning off throttling for now because we have proper rate limit handling
-const throttledQueue = new ThrottledQueue({ concurrency: 1, interval: 0, limit: 1 });
+// const throttledQueue = new ThrottledQueue({ concurrency: 1, interval: 1000, limit: 1 });
 
 async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string, embeds: any[]) {
 	// Send the embeds
@@ -81,7 +81,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 	const formData = new FormData()
 	formData.append("payload_json", embedBody)
 	const sendHook = async () => {
-		await throttledQueue.add(async () => { }) // Rate limit ourselves
+		// await throttledQueue.add(async () => { }) // Rate limit ourselves
 		return fetch(hook, {
 			method: "POST",
 			body: formData,
