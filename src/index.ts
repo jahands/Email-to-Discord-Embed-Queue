@@ -31,7 +31,7 @@ export default {
 		} catch (e) {
 			if (e instanceof Error) {
 				await logtail({
-					env, msg: e.message,
+					env, msg: 'Failed while processing batch: ' + e.message,
 					level: LogLevel.Error,
 					data: {
 						error: {

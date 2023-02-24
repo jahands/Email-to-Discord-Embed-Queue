@@ -59,9 +59,10 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	} catch (e) {
 		if (e instanceof Error) {
 			await logtail({
-				env, msg: e.message,
+				env, msg: 'Failed to write to AE' + e.message,
 				level: LogLevel.Error,
 				data: {
+					aeDataSet: 'embedstats',
 					error: {
 						message: e.message,
 						stack: e.stack
@@ -145,8 +146,8 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 			const body = await discordResponse.json() as { retry_after: number | undefined }
 			console.log(body)
 			ctx.waitUntil(logtail({
-				env, msg: JSON.stringify(body),
-				level: LogLevel.Error,
+				env, msg: 'Ratelimited by discord - sleeping: ' + JSON.stringify(body),
+				level: LogLevel.Warn,
 				data: {
 					discordHook: hook,
 					discordResponse: body
