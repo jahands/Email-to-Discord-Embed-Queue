@@ -25,7 +25,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		const parser = new PostalMime()
 		const email = await parser.parse(arrayBuffer)
 		let text = email.text
-		if (!text || text === '' || text === '\n') {
+		if (!text || text.trim() === '' || text.trim() === '\n') {
 			text = convertHTML(email.html)
 		}
 		const embed = createEmbedBody(text, message.subject, message.to, message.from, message.ts)
