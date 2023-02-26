@@ -1,12 +1,12 @@
 import { sendDiscordEmbeds } from './discord';
 import { logtail, LogLevel } from './logtail';
 import { EmbedQueueData, Env } from './types'
-import { getDiscordWebhook, getSentry } from './utils';
+import { getDiscordWebhook, getSentry, initSentry } from './utils';
 
 export default {
 	async queue(batch: MessageBatch<EmbedQueueData>, env: Env, ctx: ExecutionContext) {
 		try {
-			const sentry = getSentry(env, ctx)
+			const sentry = initSentry(env, ctx)
 			sentry.addBreadcrumb({ message: 'Processing batch', data: { batch } })
 
 			console.log(`Processing ${batch.messages.length} messages...`)
@@ -33,7 +33,7 @@ export default {
 			}
 		} catch (e) {
 			if (e instanceof Error) {
-				await logtail({
+				logtail({
 					env, ctx, e, msg: 'Failed while processing batch: ' + e.message,
 					level: LogLevel.Error,
 				})
