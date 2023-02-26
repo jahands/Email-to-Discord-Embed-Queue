@@ -119,14 +119,8 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 	} catch (e) {
 		if (e instanceof Error) {
 			ctx.waitUntil(logtail({
-				env, msg: `Failed to preimptively avoid ratelimits: ${e.message}`,
+				env, e, msg: `Failed to preimptively avoid ratelimits: ${e.message}`,
 				level: LogLevel.Error,
-				data: {
-					error: {
-						message: e.message,
-						stack: e.stack
-					}
-				}
 			}))
 		}
 	}
