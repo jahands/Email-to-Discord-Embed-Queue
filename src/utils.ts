@@ -1,6 +1,6 @@
 import { Env } from './types'
 
-export async function getDiscordWebhook(from: string, env: Env): Promise<{ name: string, hook: string }> {
+export async function getDiscordWebhook(from: string, to: string, env: Env): Promise<{ name: string, hook: string }> {
 	if (from === 'noreply@github.com'
 		|| from === 'notifications@github.com'
 		|| from.endsWith('@sgmail.github.com')
@@ -12,6 +12,8 @@ export async function getDiscordWebhook(from: string, env: Env): Promise<{ name:
 		return { hook: env.GERRITHOOK, name: 'gerrit' }
 	} else if (from.endsWith('@alerts.bounces.google.com')) {
 		return { hook: env.GOOGLEALERTSHOOK, name: 'google_alerts' }
+	} else if (to === 'usa-gov-lists@eemailme.com') {
+		return { hook: env.GOVHOOK, name: 'gov-lists' }
 	}
 	return { hook: env.DISCORDHOOK, name: 'default' }
 }
