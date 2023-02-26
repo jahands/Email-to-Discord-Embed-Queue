@@ -1,11 +1,14 @@
 import { sendDiscordEmbeds } from './discord';
 import { logtail, LogLevel } from './logtail';
 import { EmbedQueueData, Env } from './types'
-import { getDiscordWebhook } from './utils';
+import { getDiscordWebhook, getSentry } from './utils';
 
 export default {
 	async queue(batch: MessageBatch<EmbedQueueData>, env: Env, ctx: ExecutionContext) {
 		try {
+			const sentry = getSentry(env, ctx)
+			sentry.addBreadcrumb({ message: 'Processing batch', data: { batch } })
+
 			console.log(`Processing ${batch.messages.length} messages...`)
 			// Different webhooks for different senders, so we need to group by webhook
 			const messages = batch.messages.map((m) => m.body)
