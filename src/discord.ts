@@ -5,7 +5,7 @@ import { convert as convertHTML } from 'html-to-text';
 
 import { DISCORD_EMBED_LIMIT, DISCORD_TOTAL_LIMIT } from "./constants"
 import { EmbedQueueData, Env } from './types'
-import { getAuthHeader, sleep } from "./utils"
+import { getAuthHeader } from "./utils"
 import { logtail, LogLevel } from "./logtail";
 
 /** Sends multiple embeds with no .txt fallback */
@@ -112,7 +112,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 							}
 						}
 					})
-					await sleep(resetAfter * 1000)
+					await scheduler.wait(resetAfter * 1000)
 				}
 			}
 		}
@@ -149,7 +149,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 			})
 			if (body.retry_after) {
 				console.log('sleeping...')
-				await sleep(body.retry_after * 1000)
+				await scheduler.wait(body.retry_after * 1000)
 				// retry and give up if it fails again
 				const retryResponse = await sendHook()
 				if (!retryResponse.ok) {

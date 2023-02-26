@@ -31,10 +31,6 @@ export function getAuthHeader(env: Env): { Authorization: string } {
 	return { Authorization: `Bot ${env.BOTTOKEN}` }
 }
 
-export function sleep(ms: number) {
-	return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 let sentry: Toucan | undefined
 export function getSentry(env: Env, ctx: ExecutionContext): Toucan {
 	if (!sentry) {
