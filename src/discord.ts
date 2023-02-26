@@ -58,7 +58,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		})
 	} catch (e) {
 		if (e instanceof Error) {
-			await logtail({
+			logtail({
 				env, ctx, msg: 'Failed to write to AE' + e.message,
 				level: LogLevel.Error,
 				data: {
@@ -99,7 +99,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 				const resetAfter = parseInt(rateLimitResetAfter)
 				if (resetAfter > 0) {
 					console.log(`Ratelimited! Sleeping for ${resetAfter} seconds...`)
-					ctx.waitUntil(logtail({
+					logtail({
 						env, ctx, msg: `Ratelimited! Sleeping for ${resetAfter} seconds...`,
 						level: LogLevel.Info,
 						data: {
@@ -111,17 +111,17 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 								'X-RateLimit-Bucket': discordResponse.headers.get('X-RateLimit-Bucket'),
 							}
 						}
-					}))
+					})
 					await sleep(resetAfter * 1000)
 				}
 			}
 		}
 	} catch (e) {
 		if (e instanceof Error) {
-			ctx.waitUntil(logtail({
+			logtail({
 				env, ctx, e, msg: `Failed to preimptively avoid ratelimits: ${e.message}`,
 				level: LogLevel.Error,
-			}))
+			})
 		}
 	}
 	// Log all headers:
@@ -139,28 +139,28 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 		if (discordResponse.status === 429) {
 			const body = await discordResponse.json() as { retry_after: number | undefined }
 			console.log(body)
-			ctx.waitUntil(logtail({
+			logtail({
 				env, ctx, msg: 'Ratelimited by discord - sleeping: ' + JSON.stringify(body),
 				level: LogLevel.Warn,
 				data: {
 					discordHook: hook,
 					discordResponse: body
 				}
-			}))
+			})
 			if (body.retry_after) {
 				console.log('sleeping...')
 				await sleep(body.retry_after * 1000)
 				// retry and give up if it fails again
 				const retryResponse = await sendHook()
 				if (!retryResponse.ok) {
-					ctx.waitUntil(logtail({
+					logtail({
 						env, ctx, msg: `Failed after 1 retry, giving up: ${JSON.stringify(body)}`,
 						level: LogLevel.Error,
 						data: {
 							discordHook: hook,
 							discordResponse: body
 						}
-					}))
+					})
 				}
 			}
 		} else if (discordResponse.status === 400) {
@@ -173,7 +173,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 						const idx = parseInt(embed) // Index of bad embed
 						console.log(`Bad embed at index ${idx}`)
 						console.log(embeds[idx])
-						ctx.waitUntil(logtail({
+						logtail({
 							env, ctx, msg: `Bad embed at index ${idx} - ` + JSON.stringify(body),
 							level: LogLevel.Error,
 							data: {
@@ -181,7 +181,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 								embed: embeds[idx],
 								discordResponse: body
 							}
-						}))
+						})
 						logged = true
 					} catch {
 						console.log('unable to parse embed index')
@@ -189,14 +189,14 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 				}
 			}
 			if (!logged) {
-				ctx.waitUntil(logtail({
+				logtail({
 					env, ctx, msg: JSON.stringify(body),
 					level: LogLevel.Error,
 					data: {
 						discordHook: hook,
 						discordResponse: body
 					}
-				}))
+				})
 			}
 		}
 	}
