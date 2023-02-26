@@ -12,11 +12,16 @@ export async function logtail(args: {
 }) {
 	const { env, ctx, msg, level, data, e } = args
 	if (e) {
+		getSentry(env, ctx).captureException(e, {
+			data: {
+				msg,
+				...data
+			}
+		})
 		data.error = {
 			message: e.message,
 			stack: e.stack
 		}
-		getSentry(env, ctx).captureException(e)
 	} else {
 		getSentry(env, ctx).captureMessage(msg, level || LogLevel.Info, { data })
 	}
