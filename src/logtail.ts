@@ -11,8 +11,14 @@ export function logtail(args: {
 	e?: Error
 }) {
 	const { env, ctx, msg, level, data, e } = args
+
+	const sentry = getSentry(env, ctx)
+	sentry.setExtra('data', data)
+	if (level) sentry.setExtra('level', level)
+	sentry.setExtra('msg', msg)
+
 	if (e) {
-		getSentry(env, ctx).captureException(e, {
+		sentry.captureException(e, {
 			data: {
 				msg,
 				...data
