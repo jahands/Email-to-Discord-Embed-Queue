@@ -5,8 +5,8 @@ import { getDiscordWebhook, getSentry, initSentry } from './utils';
 
 export default {
 	async queue(batch: MessageBatch<EmbedQueueData>, env: Env, ctx: ExecutionContext) {
+		const sentry = initSentry(env, ctx)
 		try {
-			const sentry = initSentry(env, ctx)
 			sentry.addBreadcrumb({ message: 'Processing batch', data: { batch } })
 
 			console.log(`Processing ${batch.messages.length} messages...`)
