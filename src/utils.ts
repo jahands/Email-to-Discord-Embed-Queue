@@ -35,9 +35,13 @@ export function sleep(ms: number) {
 	return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+let sentry: Toucan | undefined
 export function getSentry(env: Env, ctx: ExecutionContext) {
-	return new Toucan({
-		dsn: env.SENTRY_DSN,
-		context: ctx,
-	});
+	if (!sentry) {
+		sentry = new Toucan({
+			dsn: env.SENTRY_DSN,
+			context: ctx,
+		});
+	}
+	return sentry
 }
