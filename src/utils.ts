@@ -1,3 +1,4 @@
+import { Toucan } from 'toucan-js'
 import { Env } from './types'
 
 export async function getDiscordWebhook(from: string, to: string, env: Env): Promise<{ name: string, hook: string }> {
@@ -32,4 +33,11 @@ export function getAuthHeader(env: Env): { Authorization: string } {
 
 export function sleep(ms: number) {
 	return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+export function getSentry(env: Env, ctx: ExecutionContext) {
+	return new Toucan({
+		dsn: env.SENTRY_DSN,
+		context: ctx,
+	});
 }

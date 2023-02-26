@@ -21,6 +21,7 @@ export interface Env {
 	EMBEDSTATS: AnalyticsEngineDataset
 	ENVIRONMENT: string
 	LOGTAIL_KEY: string
+	SENTRY_DSN: string
 }
 
 /** Synced with https://replit.com/@jachands/Email-Worker-Github#src/types.ts */

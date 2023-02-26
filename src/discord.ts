@@ -59,7 +59,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	} catch (e) {
 		if (e instanceof Error) {
 			await logtail({
-				env, msg: 'Failed to write to AE' + e.message,
+				env, ctx, msg: 'Failed to write to AE' + e.message,
 				level: LogLevel.Error,
 				data: {
 					aeDataSet: 'embedstats',
@@ -100,7 +100,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 				if (resetAfter > 0) {
 					console.log(`Ratelimited! Sleeping for ${resetAfter} seconds...`)
 					ctx.waitUntil(logtail({
-						env, msg: `Ratelimited! Sleeping for ${resetAfter} seconds...`,
+						env, ctx, msg: `Ratelimited! Sleeping for ${resetAfter} seconds...`,
 						level: LogLevel.Info,
 						data: {
 							discordResponseHeaders: {
@@ -119,7 +119,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 	} catch (e) {
 		if (e instanceof Error) {
 			ctx.waitUntil(logtail({
-				env, e, msg: `Failed to preimptively avoid ratelimits: ${e.message}`,
+				env, ctx, e, msg: `Failed to preimptively avoid ratelimits: ${e.message}`,
 				level: LogLevel.Error,
 			}))
 		}
@@ -140,7 +140,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 			const body = await discordResponse.json() as { retry_after: number | undefined }
 			console.log(body)
 			ctx.waitUntil(logtail({
-				env, msg: 'Ratelimited by discord - sleeping: ' + JSON.stringify(body),
+				env, ctx, msg: 'Ratelimited by discord - sleeping: ' + JSON.stringify(body),
 				level: LogLevel.Warn,
 				data: {
 					discordHook: hook,
@@ -154,7 +154,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 				const retryResponse = await sendHook()
 				if (!retryResponse.ok) {
 					ctx.waitUntil(logtail({
-						env, msg: `Failed after 1 retry, giving up: ${JSON.stringify(body)}`,
+						env, ctx, msg: `Failed after 1 retry, giving up: ${JSON.stringify(body)}`,
 						level: LogLevel.Error,
 						data: {
 							discordHook: hook,
@@ -174,7 +174,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 						console.log(`Bad embed at index ${idx}`)
 						console.log(embeds[idx])
 						ctx.waitUntil(logtail({
-							env, msg: `Bad embed at index ${idx} - ` + JSON.stringify(body),
+							env, ctx, msg: `Bad embed at index ${idx} - ` + JSON.stringify(body),
 							level: LogLevel.Error,
 							data: {
 								discordHook: hook,
@@ -190,7 +190,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 			}
 			if (!logged) {
 				ctx.waitUntil(logtail({
-					env, msg: JSON.stringify(body),
+					env, ctx, msg: JSON.stringify(body),
 					level: LogLevel.Error,
 					data: {
 						discordHook: hook,
