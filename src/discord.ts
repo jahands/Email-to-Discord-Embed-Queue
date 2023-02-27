@@ -33,16 +33,19 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 
 		// Recording some stats here since we're parsing anyway
 		if (message.to === 'usa-gov-lists@eemailme.com') {
-			try {
-				const govDeliveryID = getGovDeliveryID(text)
-				govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
-			} catch (e) {
-				if (e instanceof Error) {
-					getSentry(env, ctx).setExtra('emailText', text)
-					logtail({
-						env, ctx, e, msg: 'Failed to get GovDelivery ID: ' + e.message,
-						level: LogLevel.Error,
-					})
+			for (const text of [email.text, email.html]) {
+				try {
+					const govDeliveryID = getGovDeliveryID(text)
+					govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
+					break // Take first ID we find
+				} catch (e) {
+					if (e instanceof Error) {
+						getSentry(env, ctx).setExtra('emailText', text)
+						logtail({
+							env, ctx, e, msg: 'Failed to get GovDelivery ID: ' + e.message,
+							level: LogLevel.Error,
+						})
+					}
 				}
 			}
 		}
