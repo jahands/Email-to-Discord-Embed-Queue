@@ -18,14 +18,16 @@ export function getGovDeliveryStats(): Map<string, number> {
 
 export function recordGovDeliveryStats(env: Env, ctx: ExecutionContext): void {
   const stats = getGovDeliveryStats()
-  if (stats.keys.length > 0) {
+  if (stats.size > 0) {
     for (const [id, count] of stats) {
       try {
-        env.GOVDELIVERY.writeDataPoint({
-          blobs: [id],
-          doubles: [count],
-          indexes: [id]
-        })
+        if (count > 0) {
+          env.GOVDELIVERY.writeDataPoint({
+            blobs: [id],
+            doubles: [count],
+            indexes: [id]
+          })
+        }
       } catch (e) {
         if (e instanceof Error) {
           logtail({
