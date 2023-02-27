@@ -43,7 +43,11 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 					break // Take first ID we find
 				} catch (e) {
 					if (e instanceof Error) {
-						getSentry(env, ctx).setExtra('emailText', next)
+						const sentry = getSentry(env, ctx)
+						sentry.setExtra('email.govdelivery.text', next)
+						sentry.setExtra('email.govdelivery.from', message.from)
+						sentry.setExtra('email.govdelivery.subject', message.subject)
+						sentry.setExtra('email.govdelivery.to', message.to)
 						logtail({
 							env, ctx, e, msg: 'Failed to get GovDelivery ID: ' + e.message,
 							level: LogLevel.Error,
