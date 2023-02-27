@@ -58,17 +58,22 @@ export function recordGovDeliveryStats(env: Env, ctx: ExecutionContext): void {
 }
 
 export function getGovDeliveryID(emailText: string): string {
-  const match = emailText.match(/https*:\/\/public\.govdelivery\.com\/accounts\/[a-zA-Z_-]+\/subscriber\//g)
-  if (!match || match.length === 0) throw new Error('GovDelivery ID not found')
-  let prefix = '://public.govdelivery.com/accounts/'
+  const match = emailText.match(/https*:\/\/((public\.govdelivery\.com)|(updates\.loc\.gov))\/accounts\/[a-zA-Z_-]+\/subscriber\//g)
+  if (!match || match.length === 0) throw new Error('GovDelivery ID not found (match)')
+
+  let prefix = [
+    '://public.govdelivery.com/accounts/', '://updates.loc.gov/accounts/'
+  ].filter((p) => match[0].includes(p))[0]
+  if (!prefix) throw new Error('GovDelivery ID not found (prefix)')
+
   let id: string | undefined
   try {
     id = match[0].split(prefix)[1].split('/')[0].toUpperCase()
   } catch (e) {
     if (e instanceof Error) {
-      throw new Error('GovDelivery ID not found: ' + e.message)
+      throw new Error('GovDelivery ID not found (parse): ' + e.message)
     }
   }
-  if (!id || id === '') throw new Error('GovDelivery ID not found')
+  if (!id || id === '') throw new Error('GovDelivery ID not found (id)')
   return id
 }
