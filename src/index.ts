@@ -10,7 +10,6 @@ export default {
 		initGovDeliveryStats()
 
 		try {
-			sentry.addBreadcrumb({ message: 'Processing batch' })
 			sentry.setExtra('batch.messages.length', batch.messages.length)
 
 			console.log(`Processing ${batch.messages.length} messages...`)
