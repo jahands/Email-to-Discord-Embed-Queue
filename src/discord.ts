@@ -32,7 +32,9 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		}
 
 		// Recording some stats here since we're parsing anyway
-		if (message.to === 'usa-gov-lists@eemailme.com') {
+		// Don't attempt known non-govdelivery emails
+		const govIDBlocklist = ['fbi@subscriptions.fbi.gov']
+		if (message.to === 'usa-gov-lists@eemailme.com' && !govIDBlocklist.includes(message.from)) {
 			for (const next of [text, email.text, email.html]) {
 				if(!next) continue
 				try {
