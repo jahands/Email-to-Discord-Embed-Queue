@@ -10,7 +10,8 @@ export default {
 		initGovDeliveryStats()
 
 		try {
-			sentry.addBreadcrumb({ message: 'Processing batch', data: { batch } })
+			sentry.addBreadcrumb({ message: 'Processing batch' })
+			sentry.setExtra('batch.messages.length', batch.messages.length)
 
 			console.log(`Processing ${batch.messages.length} messages...`)
 			// Different webhooks for different senders, so we need to group by webhook
