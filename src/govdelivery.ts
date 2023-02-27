@@ -3,9 +3,7 @@ import { Env } from "./types";
 
 let govDeliveryStats: Map<string, number>
 export function initGovDeliveryStats(): Map<string, number> {
-  if (!govDeliveryStats) {
-    govDeliveryStats = new Map<string, number>()
-  }
+  govDeliveryStats = new Map<string, number>()
   return govDeliveryStats
 }
 
