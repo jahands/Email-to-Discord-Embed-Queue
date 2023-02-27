@@ -25,7 +25,7 @@ export function recordGovDeliveryStats(env: Env, ctx: ExecutionContext): void {
             // We better stop or AE will refuse stats
             logtail({
               env, ctx, msg: 'Too many GovDelivery stats to send, stopping',
-              level: LogLevel.Error,
+              level: LogLevel.Warn,
               data: {
                 aeDataSet: 'govdelivery',
                 stats,
