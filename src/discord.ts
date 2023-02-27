@@ -5,8 +5,9 @@ import { convert as convertHTML } from 'html-to-text';
 
 import { DISCORD_EMBED_LIMIT, DISCORD_TOTAL_LIMIT } from "./constants"
 import { EmbedQueueData, Env } from './types'
-import { getAuthHeader } from "./utils"
+import { getAuthHeader, getSentry } from "./utils"
 import { logtail, LogLevel } from "./logtail";
+import { getGovDeliveryID, getGovDeliveryStats } from "./govdelivery";
 
 /** Sends multiple embeds with no .txt fallback */
 export async function sendDiscordEmbeds(messages: EmbedQueueData[],
@@ -16,6 +17,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	let totalEmbeds = 0
 	let totalAPICalls = 0
 	let totalSize = 0
+	const govDeliveryStats = getGovDeliveryStats()
 	for (const message of messages) {
 		const rawEmail = await env.R2EMAILS.get(message.r2path)
 		if (!rawEmail) {
@@ -28,6 +30,23 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		if (!text || text.trim() === '' || text.trim() === '\n') {
 			text = convertHTML(email.html)
 		}
+
+		// Recording some stats here since we're parsing anyway
+		if (message.from === 'messages@public.govdelivery.com') {
+			try {
+				const govDeliveryID = getGovDeliveryID(text)
+				govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
+			} catch (e) {
+				if (e instanceof Error) {
+					getSentry(env, ctx).setExtra('emailText', text)
+					logtail({
+						env, ctx, e, msg: 'Failed to get GovDelivery ID: ' + e.message,
+						level: LogLevel.Error,
+					})
+				}
+			}
+		}
+
 		const embed = createEmbedBody(text, message.subject, message.to, message.from, message.ts)
 		if (nextSize + embed.size > DISCORD_TOTAL_LIMIT || embeds.length >= 10) {
 			await sendHookWithEmbeds(env, ctx, discordHook, embeds)
@@ -43,6 +62,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		embeds.push(embed.embed)
 		nextSize += embed.size
 	}
+
 	if (embeds.length > 0) {
 		await sendHookWithEmbeds(env, ctx, discordHook, embeds)
 

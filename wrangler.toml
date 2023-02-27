@@ -6,6 +6,7 @@ workers_dev = false
 
 analytics_engine_datasets = [
 	{ binding = "EMBEDSTATS", dataset = "DISCORD_EMAIL_EMBEDS" },
+	{ binding = "GOVDELIVERY", dataset = "GOVDELIVERY_EMAIL" },
 ]
 
 [vars]

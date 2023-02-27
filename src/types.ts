@@ -21,6 +21,7 @@ export interface Env {
 	R2EMAILS: R2Bucket
 	BOTTOKEN: string // Discord bot token to improve ratelimits
 	EMBEDSTATS: AnalyticsEngineDataset
+	GOVDELIVERY: AnalyticsEngineDataset
 	ENVIRONMENT: string
 	LOGTAIL_KEY: string
 	SENTRY_DSN: string

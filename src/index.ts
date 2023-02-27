@@ -1,11 +1,14 @@
 import { sendDiscordEmbeds } from './discord';
+import { getGovDeliveryStats, initGovDeliveryStats, recordGovDeliveryStats } from './govdelivery';
 import { logtail, LogLevel } from './logtail';
 import { EmbedQueueData, Env } from './types'
-import { getDiscordWebhook, getSentry, initSentry } from './utils';
+import { getDiscordWebhook, initSentry } from './utils';
 
 export default {
 	async queue(batch: MessageBatch<EmbedQueueData>, env: Env, ctx: ExecutionContext) {
 		const sentry = initSentry(env, ctx)
+		initGovDeliveryStats()
+
 		try {
 			sentry.addBreadcrumb({ message: 'Processing batch', data: { batch } })
 
@@ -39,5 +42,7 @@ export default {
 				})
 			}
 		}
+
+		recordGovDeliveryStats(env, ctx, getGovDeliveryStats())
 	},
 };
