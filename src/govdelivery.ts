@@ -46,7 +46,7 @@ export function recordGovDeliveryStats(env: Env, ctx: ExecutionContext): void {
 export function getGovDeliveryID(emailText: string): string {
   const match = emailText.match(/https*:\/\/public\.govdelivery\.com\/accounts\/[a-zA-Z_-]+\/subscriber\//g)
   if (!match || match.length === 0) throw new Error('GovDelivery ID not found')
-  const prefix = 'https://public.govdelivery.com/accounts/'
+  let prefix = '://public.govdelivery.com/accounts/'
   let id: string | undefined
   try {
     id = match[0].split(prefix)[1].split('/')[0].toUpperCase()
