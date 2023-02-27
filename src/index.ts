@@ -43,6 +43,6 @@ export default {
 			}
 		}
 
-		recordGovDeliveryStats(env, ctx, getGovDeliveryStats())
+		recordGovDeliveryStats(env, ctx)
 	},
 };

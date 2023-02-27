@@ -16,8 +16,8 @@ export function getGovDeliveryStats(): Map<string, number> {
   return govDeliveryStats
 }
 
-export function recordGovDeliveryStats(
-  env: Env, ctx: ExecutionContext, stats: Map<string, number>): void {
+export function recordGovDeliveryStats(env: Env, ctx: ExecutionContext): void {
+  const stats = getGovDeliveryStats()
   if (stats.keys.length > 0) {
     for (const [id, count] of stats) {
       try {
