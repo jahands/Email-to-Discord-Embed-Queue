@@ -17,9 +17,23 @@ export function getGovDeliveryStats(): Map<string, number> {
 export function recordGovDeliveryStats(env: Env, ctx: ExecutionContext): void {
   const stats = getGovDeliveryStats()
   if (stats.size > 0) {
+    let statsSent = 0
     for (const [id, count] of stats) {
       try {
         if (count > 0) {
+          if (statsSent >= 18) { // 24 - 6 (how many channels we have)
+            // We better stop or AE will refuse stats
+            logtail({
+              env, ctx, msg: 'Too many GovDelivery stats to send, stopping',
+              level: LogLevel.Warn,
+              data: {
+                aeDataSet: 'govdelivery',
+                stats,
+              }
+            })
+            break
+          }
+          statsSent++
           env.GOVDELIVERY.writeDataPoint({
             blobs: [id],
             doubles: [count],
