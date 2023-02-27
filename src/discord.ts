@@ -32,7 +32,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		}
 
 		// Recording some stats here since we're parsing anyway
-		if (message.from.match(/messages@\w+\.govdelivery\.com/)) {
+		if (message.to === 'usa-gov-lists@eemailme.com') {
 			try {
 				const govDeliveryID = getGovDeliveryID(text)
 				govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
