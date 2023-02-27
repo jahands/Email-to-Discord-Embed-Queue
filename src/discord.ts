@@ -145,11 +145,11 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 		}
 	}
 	// Log all headers:
-	console.log('X-RateLimit-Limit', discordResponse.headers.get('X-RateLimit-Limit'))
-	console.log('X-RateLimit-Remaining', discordResponse.headers.get('X-RateLimit-Remaining'))
-	console.log('X-RateLimit-Reset', discordResponse.headers.get('X-RateLimit-Reset'))
-	console.log('X-RateLimit-Reset-After', discordResponse.headers.get('X-RateLimit-Reset-After'))
-	console.log('X-RateLimit-Bucket', discordResponse.headers.get('X-RateLimit-Bucket'))
+	// console.log('X-RateLimit-Limit', discordResponse.headers.get('X-RateLimit-Limit'))
+	// console.log('X-RateLimit-Remaining', discordResponse.headers.get('X-RateLimit-Remaining'))
+	// console.log('X-RateLimit-Reset', discordResponse.headers.get('X-RateLimit-Reset'))
+	// console.log('X-RateLimit-Reset-After', discordResponse.headers.get('X-RateLimit-Reset-After'))
+	// console.log('X-RateLimit-Bucket', discordResponse.headers.get('X-RateLimit-Bucket'))
 
 	if (!discordResponse.ok) {
 		console.log("Discord Webhook Failed")

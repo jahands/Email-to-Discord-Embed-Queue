@@ -44,7 +44,7 @@ export function recordGovDeliveryStats(
 }
 
 export function getGovDeliveryID(emailText: string): string {
-  const match = emailText.match(/https:\/\/public\.govdelivery\.com\/accounts\/[a-zA-Z]+\/subscriber\/edit/g)
+  const match = emailText.match(/https:\/\/public\.govdelivery\.com\/accounts\/[a-zA-Z]+\/subscriber\//g)
   if (!match || match.length === 0) throw new Error('GovDelivery ID not found')
   const prefix = 'https://public.govdelivery.com/accounts/'
   let id: string | undefined
