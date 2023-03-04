@@ -27,7 +27,7 @@ export function logtail(args: {
 		})
 		data.error = e
 	} else {
-		getSentry(env, ctx).captureMessage(msg, level || LogLevel.Info, { data })
+		sentry.captureMessage(msg, level || LogLevel.Info, { data })
 	}
 	ctx.waitUntil(fetch("https://in.logtail.com",
 		{
