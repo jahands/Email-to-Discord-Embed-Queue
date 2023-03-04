@@ -23,17 +23,11 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		const rawEmail = await pRetry(() => env.R2EMAILS.get(message.r2path), {
 			retries: 5, minTimeout: 250, onFailedAttempt: (e) => {
 				if (e.retriesLeft === 0) {
-					logtail({
-						env, ctx, e, msg: 'Unable to get raw email from R2!! ' + e.message,
-						level: LogLevel.Error,
-						data: {
-							retriesLeft: e.retriesLeft,
-							to: message.to,
-							from: message.from,
-							subject: message.subject,
-							r2path: message.r2path,
-						}
-					})
+					const sentry = getSentry(env, ctx)
+					sentry.setExtra('email.r2path', message.r2path)
+					sentry.setExtra('email.from', message.from)
+					sentry.setExtra('email.subject', message.subject)
+					sentry.setExtra('email.to', message.to)
 				}
 			}
 		})
