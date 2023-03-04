@@ -8,10 +8,11 @@ import { EmbedQueueData, Env } from './types'
 import { getAuthHeader, getSentry } from "./utils"
 import { logtail, LogLevel } from "./logtail";
 import { getGovDeliveryID, getGovDeliveryStats } from "./govdelivery";
+import pRetry from "p-retry";
 
 /** Sends multiple embeds with no .txt fallback */
 export async function sendDiscordEmbeds(messages: EmbedQueueData[],
-	discordHook: string, discordHookName: string, env: Env, ctx: ExecutionContext) {
+	discordHook: string, discordHookName: string, env: Env, ctx: ExecutionContext): Promise<void> {
 	let nextSize = 0 // max = DISCORD_TOTAL_LIMIT
 	let embeds = []
 	let totalEmbeds = 0
@@ -19,7 +20,9 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	let totalSize = 0
 	const govDeliveryStats = getGovDeliveryStats()
 	for (const message of messages) {
-		const rawEmail = await env.R2EMAILS.get(message.r2path)
+		const rawEmail = await pRetry(() => env.R2EMAILS.get(message.r2path), {
+			retries: 5, minTimeout: 250
+		})
 		if (!rawEmail) {
 			throw new Error('Unable to get raw email from R2!!')
 		}
@@ -36,7 +39,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		const govIDBlocklist = ['fbi@subscriptions.fbi.gov']
 		if (message.to === 'usa-gov-lists@eemailme.com' && !govIDBlocklist.includes(message.from)) {
 			for (const next of [text, email.text, email.html]) {
-				if(!next) continue
+				if (!next) continue
 				try {
 					const govDeliveryID = getGovDeliveryID(next)
 					govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
