@@ -169,8 +169,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 							discordResponseHeaders: getDiscordHeaders(discordResponse.headers)
 						}
 					})
-					// Adding 50ms because we keep hitting rate limits even after the reset time
-					await scheduler.wait(resetAfter * 1000 + 50)
+					await scheduler.wait(resetAfter * 1000)
 				}
 			}
 		}
