@@ -205,7 +205,9 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 						level: LogLevel.Error,
 						data: {
 							discordHook: hook,
-							discordResponse: body
+							discordResponse: body,
+							discordResponseHeaders: getDiscordHeaders(discordResponse.headers),
+							discordRetryResponseHeaders: getDiscordHeaders(retryResponse.headers)
 						}
 					})
 				}
