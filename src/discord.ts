@@ -68,12 +68,9 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		}
 
 		// Recording some stats here since we're parsing anyway
-		// Don't attempt known non-govdelivery emails
 		// May have already been recorded by email worker - this is
 		// a fallback if it was missing a header
-		const govIDBlocklist = ['fbi@subscriptions.fbi.gov']
-		if (message.shouldCheckGovDelivery &&
-			message.to === 'usa-gov-lists@eemailme.com' && !govIDBlocklist.includes(message.from)) {
+		if (message.shouldCheckGovDelivery) {
 			for (const next of [text, email.text, email.html]) {
 				if (!next) continue
 				try {
