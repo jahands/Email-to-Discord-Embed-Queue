@@ -46,13 +46,15 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		if (!rawEmail) {
 			// Ignore this message but log to sentry
 			const sentry = getSentry(env, ctx)
-			sentry.setExtra('email.r2path', message.r2path)
-			sentry.setExtra('email.from', message.from)
-			sentry.setExtra('email.subject', message.subject)
-			sentry.setExtra('email.to', message.to)
-			sentry.setExtra('rawEmail', rawEmail)
-			const msg = 'Unable to get raw email from R2!! Skipping this message'
-			logtail({ env, ctx, msg, level: LogLevel.Error })
+			sentry.withScope((scope) => {
+				scope.setExtra('email.r2path', message.r2path)
+				scope.setExtra('email.from', message.from)
+				scope.setExtra('email.subject', message.subject)
+				scope.setExtra('email.to', message.to)
+				scope.setExtra('rawEmail', rawEmail)
+				const msg = 'Unable to get raw email from R2!! Skipping this message'
+				logtail({ env, ctx, msg, level: LogLevel.Error })
+			})
 			continue
 		}
 		const arrayBuffer = await rawEmail.arrayBuffer()
