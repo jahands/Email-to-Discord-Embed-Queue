@@ -20,7 +20,10 @@ describe('govdelivery', () => {
         'https://content.govdelivery.com/accounts/TXDOT/bulletins/aasdff',
         'https://updates.loc.gov/accounts/TXDOT/bulletins/aasdff',
         'https://admin.govdelivery.com/attachments/fancy_images/TXDOT/2014/12/409029/usfsis-footer-blue-logo_original.jpg',
-        'http://public.govdelivery.com/accounts/TXDOT/subscribers/new?preferences=true'
+        'http://public.govdelivery.com/accounts/TXDOT/subscribers/new?preferences=true',
+
+        // msc from Sentry
+        'https://content.govdelivery.com/accounts/TXDOT/bulletins/34cb08e',
       ]
       function padCase(c: string): string {
         return `sdflkjsdflksdhjfgsdg\nsdflkjsdflksdhjfgsdg${c}sdflkjsdflksdhjfgsdg\nsdflkjsdflksdhjfgsdg`

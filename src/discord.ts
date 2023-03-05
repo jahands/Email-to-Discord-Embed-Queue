@@ -57,11 +57,16 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		}
 		const arrayBuffer = await rawEmail.arrayBuffer()
 		const parser = new PostalMime()
-		const email = await parser.parse(arrayBuffer)
+		const email = await parser.parse(arrayBuffer) as {
+			text: string,
+			html: string,
+			headers: { key: string, value: string }[]
+		}
 		let text = email.text
 		if (!text || text.trim() === '' || text.trim() === '\n') {
 			text = convertHTML(email.html)
 		}
+		console.log({ emailHeaders: email.headers })
 
 		// Recording some stats here since we're parsing anyway
 		// Don't attempt known non-govdelivery emails
@@ -70,8 +75,20 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 			for (const next of [text, email.text, email.html]) {
 				if (!next) continue
 				try {
-					const govDeliveryID = getGovDeliveryID(next)
+					let govDeliveryID: string | undefined
+
+					// First try headers
+					const govDeliveryIDHeader = email.headers.find((h: { key: string, value: string }) => h.key.toLowerCase() === 'x-accountcode')
+					if (govDeliveryIDHeader) {
+						govDeliveryID = govDeliveryIDHeader.value
+					} else {
+						govDeliveryID = getGovDeliveryID(next)
+					}
+
+					// Otherwise use body
+					if (!govDeliveryID) throw new Error('No GovDelivery ID found')
 					govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
+
 					break // Take first ID we find
 				} catch (e) {
 					if (e instanceof Error) {
@@ -80,6 +97,8 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 						sentry.setExtra('email.govdelivery.from', message.from)
 						sentry.setExtra('email.govdelivery.subject', message.subject)
 						sentry.setExtra('email.govdelivery.to', message.to)
+						sentry.setExtra('email.govdelivery.r2path', message.r2path)
+						sentry.setExtra('email.govdelivery.headers', email.headers)
 						logtail({
 							env, ctx, e, msg: 'Failed to get GovDelivery ID: ' + e.message,
 							level: LogLevel.Error,
