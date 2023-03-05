@@ -9,6 +9,177 @@ import { logtail, LogLevel } from "./logtail";
 import { getGovDeliveryID, getGovDeliveryStats } from "./govdelivery";
 import pRetry, { AbortError } from "p-retry";
 
+export interface DiscordEmbed {
+	title: string
+	description: string
+	author: {
+		name: string
+	}
+	footer: {
+		text: string
+	}
+
+}
+export interface MessageWithEmbed {
+	message: Message<EmbedQueueData>
+	embed: DiscordEmbed
+}
+
+export interface Batch {
+	hookURL: string
+	hookName: string
+	embeds: MessageWithEmbed[]
+	size: number
+}
+
+function newBatch(hookURL: string, hookName: string): Batch {
+	return { embeds: [], size: 0, hookURL, hookName }
+}
+
+export async function getDiscordEmbedBatches(
+	messages: Message<EmbedQueueData>[],
+	hookURL: string,
+	hookName: string,
+	env: Env,
+	ctx: ExecutionContext
+): Promise<Batch[]> {
+	const batches: Batch[] = []
+
+	let batch: Batch = newBatch(hookURL, hookName)
+	const govDeliveryStats = getGovDeliveryStats()
+
+	for (const message of messages) {
+		let rawEmail: R2ObjectBody | null | undefined
+		try {
+			rawEmail = await pRetry(() => env.R2EMAILS.get(message.body.r2path), {
+				retries: 10, minTimeout: 250, onFailedAttempt: (e) => {
+					if (e.retriesLeft === 0) {
+						const sentry = getSentry(env, ctx)
+						sentry.setExtra('email.r2path', message.body.r2path)
+						sentry.setExtra('email.from', message.body.from)
+						sentry.setExtra('email.subject', message.body.subject)
+						sentry.setExtra('email.to', message.body.to)
+						sentry.setExtra('r2Error', e)
+						throw new AbortError(e)
+					}
+				}
+			})
+		} catch (e) {
+			if (e instanceof Error) {
+				// Ignore this message but log to sentry
+				let msg = 'Unable to get raw email from R2!! Skipping this message: ' + e.message
+				logtail({ env, ctx, e, msg, level: LogLevel.Error })
+				continue
+			}
+		}
+
+		if (!rawEmail) {
+			// Ignore this message but log to sentry
+			getSentry(env, ctx).withScope((scope) => {
+				scope.setExtra('email.r2path', message.body.r2path)
+				scope.setExtra('email.from', message.body.from)
+				scope.setExtra('email.subject', message.body.subject)
+				scope.setExtra('email.to', message.body.to)
+				scope.setExtra('rawEmail', rawEmail)
+				const msg = 'Unable to get raw email from R2!! Skipping this message'
+				logtail({ env, ctx, msg, level: LogLevel.Error })
+			})
+			continue
+		}
+		const arrayBuffer = await rawEmail.arrayBuffer()
+		const parser = new PostalMime()
+		const email = await parser.parse(arrayBuffer) as {
+			text: string,
+			html: string,
+			headers: { key: string, value: string }[]
+		}
+		let text = email.text
+		if (!text || text.trim() === '' || text.trim() === '\n') {
+			text = convertHTML(email.html)
+		}
+
+		// BEGIN GOVDELIVERY STATS
+	
+		// Recording some stats here since we're parsing anyway
+		// May have already been recorded by email worker - this is
+		// a fallback if it was missing a header
+		if (message.body.shouldCheckGovDelivery) {
+			for (const next of [text, email.text, email.html]) {
+				if (!next) continue
+				try {
+					// logtail({
+					// 	env, ctx, msg: 'Attempting to get GovDelivery ID',
+					// 	level: LogLevel.Info, useSentry: false, data: {
+					// 		message, emailContent: next
+					// 	}
+					// })
+					let govDeliveryID = getGovDeliveryID(next)
+					if (!govDeliveryID) throw new Error('No GovDelivery ID found')
+
+					govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
+					break // Take first ID we find
+				} catch (e) {
+					getSentry(env, ctx).withScope(scope => {
+						if (e instanceof Error) {
+							scope.setExtra('email.govdelivery.text', next)
+							scope.setExtra('email.govdelivery.from', message.body.from)
+							scope.setExtra('email.govdelivery.subject', message.body.subject)
+							scope.setExtra('email.govdelivery.to', message.body.to)
+							scope.setExtra('email.govdelivery.r2path', message.body.r2path)
+							scope.setExtra('email.govdelivery.headers', email.headers)
+							logtail({
+								env, ctx, e, msg: 'Failed to get GovDelivery ID: ' + e.message,
+								level: LogLevel.Error,
+							})
+						}
+					})
+				}
+			}
+		}
+
+		// END GOVDELIVERY STATS
+
+		const { embed, size } = createEmbedBody(text,
+			message.body.subject, message.body.to, message.body.from, message.body.ts)
+		if (batch.size + size > DISCORD_TOTAL_LIMIT || batch.embeds.length >= 10) {
+			batches.push(batch)
+			batch = newBatch(hookURL, hookName)
+		}
+
+		batch.embeds.push({ message, embed })
+		batch.size += size
+	}
+
+	if (batch.embeds.length > 0) {
+		batches.push(batch)
+	}
+
+	return batches
+}
+
+export async function sendDiscordBatch(
+	batch: Batch,
+	env: Env,
+	ctx: ExecutionContext
+): Promise<void> {
+	try {
+		await sendHookWithEmbeds(env, ctx, batch.hookURL, batch.embeds.map(e => e.embed))
+		batch.embeds.forEach(embed => embed.message.ack())
+	} catch (e) {
+		if (e instanceof Error) {
+			logtail({
+				env, ctx, e, msg: 'Error sending discord embeds (batch)',
+				level: LogLevel.Error,
+				data: {
+					batch
+				}
+			})
+			batch.embeds.forEach(embed => embed.message.retry())
+		}
+		throw e
+	}
+}
+
 /** Sends multiple embeds with no .txt fallback */
 export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	discordHook: string, discordHookName: string, env: Env, ctx: ExecutionContext): Promise<void> {
@@ -151,7 +322,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	}
 }
 
-async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string, embeds: any[]) {
+async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string, embeds: DiscordEmbed[]) {
 	// Send the embeds
 	const embedBody = JSON.stringify({ embeds })
 	const formData = new FormData()
@@ -198,6 +369,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 						discordRetryResponseHeaders: getDiscordHeaders(retryResponse.headers)
 					}
 				})
+				throw new Error(`Failed to send to discord after 1 retry: ${JSON.stringify(body)}`)
 			}
 		} else if (discordResponse.status === 400) {
 			const body = await discordResponse.json() as any
