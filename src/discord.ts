@@ -208,7 +208,14 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 				level: LogLevel.Warning,
 				data: {
 					discordHook: hook,
-					discordResponse: body
+					discordResponse: body,
+					discordResponseHeaders: {
+						'X-RateLimit-Limit': discordResponse.headers.get('X-RateLimit-Limit'),
+						'X-RateLimit-Remaining': discordResponse.headers.get('X-RateLimit-Remaining'),
+						'X-RateLimit-Reset': discordResponse.headers.get('X-RateLimit-Reset'),
+						'X-RateLimit-Reset-After': discordResponse.headers.get('X-RateLimit-Reset-After'),
+						'X-RateLimit-Bucket': discordResponse.headers.get('X-RateLimit-Bucket'),
+					}
 				}
 			})
 			if (body.retry_after) {
