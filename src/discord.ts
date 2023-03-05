@@ -51,7 +51,13 @@ export async function getDiscordEmbedBatches(
 	for (const message of messages) {
 		let rawEmail: R2ObjectBody | null | undefined
 		try {
-			rawEmail = await pRetry(() => env.R2EMAILS.get(message.body.r2path), {
+			rawEmail = await pRetry(async () => {
+				const res = await env.R2EMAILS.get(message.body.r2path)
+				if (res === null) {
+					throw new Error('R2 returned null, maybe it\'s not available yet due to a race condition?')
+				}
+				return res
+			}, {
 				retries: 10, minTimeout: 250, onFailedAttempt: (e) => {
 					if (e.retriesLeft === 0) {
 						const sentry = getSentry(env, ctx)
