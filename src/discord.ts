@@ -45,8 +45,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 
 		if (!rawEmail) {
 			// Ignore this message but log to sentry
-			const sentry = getSentry(env, ctx)
-			sentry.withScope((scope) => {
+			getSentry(env, ctx).withScope((scope) => {
 				scope.setExtra('email.r2path', message.r2path)
 				scope.setExtra('email.from', message.from)
 				scope.setExtra('email.subject', message.subject)
@@ -88,8 +87,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 					govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
 					break // Take first ID we find
 				} catch (e) {
-					const sentry = getSentry(env, ctx)
-					sentry.withScope(scope => {
+					getSentry(env, ctx).withScope(scope => {
 						if (e instanceof Error) {
 							scope.setExtra('email.govdelivery.text', next)
 							scope.setExtra('email.govdelivery.from', message.from)
