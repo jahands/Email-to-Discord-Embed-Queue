@@ -1,6 +1,6 @@
 {
   "name": "email-to-discord-queue",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230228.0",
     "@sentry/cli": "^2.14.3",
@@ -17,8 +17,8 @@
     "start-persist": "wrangler dev --local --persist-to ./data",
     "replit-run-command": "npm run deploy",
     "clean": "rm -rf ./dist",
-    "publish:wrangler": "wrangler publish --outdir ./dist --var SENTRY_RELEASE:$(git log -1 --pretty=format:%h)",
-    "publish:sentry": "npx sentry-cli sourcemaps upload ./dist/ --release $(git log -1 --pretty=format:%h) --org personal-use-r9 --project email-to-discord"
+    "publish:wrangler": "wrangler publish --outdir ./dist --var SENTRY_RELEASE:$(scripts/version.sh)",
+    "publish:sentry": "npx sentry-cli sourcemaps upload ./dist/ --release $(scripts/version.sh) --org personal-use-r9 --project email-to-discord"
   },
   "dependencies": {
     "@jahands/msc-utils": "^0.0.69",
