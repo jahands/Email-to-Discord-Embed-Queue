@@ -12,12 +12,13 @@
   "private": true,
   "scripts": {
     "start": "wrangler dev --local",
-    "deploy": "run-s -l clean publish:*",
+    "deploy": "run-s -l prepublish publish:*",
     "test": "vitest",
     "start-persist": "wrangler dev --local --persist-to ./data",
     "replit-run-command": "npm run deploy",
     "clean": "rm -rf ./dist",
-    "publish:patch-version": "npm version patch",
+    "patch-version": "npm version patch",
+    "prepublish": "run-p -l clean patch-version",
     "publish:wrangler": "wrangler publish --outdir ./dist --var SENTRY_RELEASE:$(scripts/version.sh)",
     "publish:sentry": "npx sentry-cli sourcemaps upload ./dist/ --release $(scripts/version.sh) --org personal-use-r9 --project email-to-discord"
   },
