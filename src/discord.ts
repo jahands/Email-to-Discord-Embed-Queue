@@ -81,7 +81,8 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 					console.log({ govDeliveryIDHeader })
 					if (govDeliveryIDHeader) {
 						govDeliveryID = govDeliveryIDHeader.value.trim().toUpperCase()
-					} else {
+					}
+					if (!govDeliveryID) {
 						govDeliveryID = getGovDeliveryID(next)
 					}
 
