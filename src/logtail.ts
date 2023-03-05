@@ -23,7 +23,7 @@ export function logtail(args: {
 	}
 
 	if (e) {
-		if (level !== LogLevel.Debug) {)
+		if (level !== LogLevel.Debug) {
 			sentry.captureException(e, {
 				data: {
 					msg,
