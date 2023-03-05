@@ -20,19 +20,30 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	let totalSize = 0
 	const govDeliveryStats = getGovDeliveryStats()
 	for (const message of messages) {
-		const rawEmail = await pRetry(() => env.R2EMAILS.get(message.r2path), {
-			retries: 10, minTimeout: 250, onFailedAttempt: (e) => {
-				if (e.retriesLeft === 0) {
-					const sentry = getSentry(env, ctx)
-					sentry.setExtra('email.r2path', message.r2path)
-					sentry.setExtra('email.from', message.from)
-					sentry.setExtra('email.subject', message.subject)
-					sentry.setExtra('email.to', message.to)
-					sentry.setExtra('r2Error', e)
-					throw new Error('Unable to get raw email from R2!! ' + e.message)
+		let rawEmail: R2ObjectBody | null | undefined
+		try {
+			rawEmail = await pRetry(() => env.R2EMAILS.get(message.r2path), {
+				retries: 10, minTimeout: 250, onFailedAttempt: (e) => {
+					if (e.retriesLeft === 0) {
+						const sentry = getSentry(env, ctx)
+						sentry.setExtra('email.r2path', message.r2path)
+						sentry.setExtra('email.from', message.from)
+						sentry.setExtra('email.subject', message.subject)
+						sentry.setExtra('email.to', message.to)
+						sentry.setExtra('r2Error', e)
+						throw e
+					}
 				}
+			})
+		} catch (e) {
+			if (e instanceof Error) {
+				// Ignore this message but log to sentry
+				let msg = 'Unable to get raw email from R2!! Skipping this message: ' + e.message
+				logtail({ env, ctx, e, msg, level: LogLevel.Error })
+				continue
 			}
-		})
+		}
+
 		if (!rawEmail) {
 			// Ignore this message but log to sentry
 			const sentry = getSentry(env, ctx)
