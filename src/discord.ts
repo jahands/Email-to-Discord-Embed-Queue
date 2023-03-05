@@ -42,7 +42,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 			sentry.setExtra('email.to', message.to)
 			sentry.setExtra('rawEmail', rawEmail)
 			const msg = 'Unable to get raw email from R2!! Skipping this message'
-			logtail({ env, ctx, msg, level: LogLevel.Warning })
+			logtail({ env, ctx, msg, level: LogLevel.Error })
 			continue
 		}
 		const arrayBuffer = await rawEmail.arrayBuffer()
