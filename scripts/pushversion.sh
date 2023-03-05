@@ -4,5 +4,5 @@
 # (i.e. the commit that was just made by the version script)
 branch=$(git branch --show-current)
 if [ $(git rev-list --count origin/$branch...$branch) -eq 1 ]; then
-  git push $branch origin/$branch
+  git push
 fi
