@@ -58,17 +58,48 @@ export function recordGovDeliveryStats(env: Env, ctx: ExecutionContext): void {
 }
 
 export function getGovDeliveryID(emailText: string): string {
-  const match = emailText.match(/https*:\/\/((public\.govdelivery\.com)|(updates\.loc\.gov))\/accounts\/[a-zA-Z_-]+\/subscriber\//g)
+  let id: string | undefined
+  try {
+    id = getGovDeliveryIDByAccount(emailText)
+  } catch {
+    id = getGovDeliveryIDByFancyImages(emailText)
+  }
+
+  if (!id) throw new Error('GovDelivery ID not found')
+  return id
+}
+
+function getGovDeliveryIDByAccount(emailText: string): string {
+  const match = emailText.match(
+    /https*:\/\/(((public|content)\.govdelivery\.com)|(updates\.loc\.gov))\/accounts\/[a-zA-Z_-]+\/(subscriber|subscribers|bulletins)\//g
+  )
   if (!match || match.length === 0) throw new Error('GovDelivery ID not found (match)')
 
-  let prefix = [
-    '://public.govdelivery.com/accounts/', '://updates.loc.gov/accounts/'
-  ].filter((p) => match[0].includes(p))[0]
-  if (!prefix) throw new Error('GovDelivery ID not found (prefix)')
+  const idWithPrefix = match[0].match(/\/accounts\/[a-zA-Z_-]+\//)
+  if (!idWithPrefix || idWithPrefix.length === 0) throw new Error('GovDelivery ID not found (idWithPrefix)')
 
   let id: string | undefined
   try {
-    id = match[0].split(prefix)[1].split('/')[0].toUpperCase()
+    id = idWithPrefix[0].split('/')[2].toUpperCase()
+  } catch (e) {
+    if (e instanceof Error) {
+      throw new Error('GovDelivery ID not found (parse): ' + e.message)
+    }
+  }
+  if (!id || id === '') throw new Error('GovDelivery ID not found (id)')
+  return id
+}
+
+function getGovDeliveryIDByFancyImages(emailText: string): string {
+  const match = emailText.match(/https*:\/\/((admin\.govdelivery\.com)|(updates\.loc\.gov))\/attachments\/fancy_images\/[a-zA-Z_-]+\//g)
+  if (!match || match.length === 0) throw new Error('GovDelivery ID not found (match)')
+  console.log({ match })
+  const idWithPrefix = match[0].match(/\/attachments\/fancy_images\/[a-zA-Z_-]+\//)
+  if (!idWithPrefix || idWithPrefix.length === 0) throw new Error('GovDelivery ID not found (idWithPrefix)')
+
+  let id: string | undefined
+  try {
+    id = idWithPrefix[0].split('/')[3].toUpperCase()
   } catch (e) {
     if (e instanceof Error) {
       throw new Error('GovDelivery ID not found (parse): ' + e.message)
