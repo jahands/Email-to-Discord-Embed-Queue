@@ -3,6 +3,7 @@
   "version": "0.0.0",
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20230228.0",
+    "@sentry/cli": "^2.14.3",
     "@types/p-retry": "^3.0.1",
     "typescript": "^4.9.5",
     "vitest": "^0.28.5",
@@ -11,10 +12,11 @@
   "private": true,
   "scripts": {
     "start": "wrangler dev --local",
-    "deploy": "wrangler publish",
+    "deploy": "wrangler publish && npm run publish-sentry",
     "test": "vitest",
     "start-persist": "wrangler dev --local --persist-to ./data",
-    "replit-run-command": "npm run deploy"
+    "replit-run-command": "npm run deploy",
+    "publish-sentry": "npx sentry-cli sourcemaps upload ./dist/ --release $(git log -1 --pretty=format:%h ) --org personal-use-r9 --project email-to-discord"
   },
   "dependencies": {
     "@jahands/msc-utils": "^0.0.69",
