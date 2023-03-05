@@ -21,7 +21,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	const govDeliveryStats = getGovDeliveryStats()
 	for (const message of messages) {
 		const rawEmail = await pRetry(() => env.R2EMAILS.get(message.r2path), {
-			retries: 5, minTimeout: 250, onFailedAttempt: (e) => {
+			retries: 10, minTimeout: 250, onFailedAttempt: (e) => {
 				if (e.retriesLeft === 0) {
 					const sentry = getSentry(env, ctx)
 					sentry.setExtra('email.r2path', message.r2path)
