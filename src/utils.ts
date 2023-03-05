@@ -49,3 +49,13 @@ export function initSentry(env: Env, ctx: ExecutionContext): Toucan {
 	})
 	return sentry
 }
+
+export function getDiscordHeaders(headers: Headers) {
+	return {
+		'X-RateLimit-Limit': headers.get('X-RateLimit-Limit'),
+		'X-RateLimit-Remaining': headers.get('X-RateLimit-Remaining'),
+		'X-RateLimit-Reset': headers.get('X-RateLimit-Reset'),
+		'X-RateLimit-Reset-After': headers.get('X-RateLimit-Reset-After'),
+		'X-RateLimit-Bucket': headers.get('X-RateLimit-Bucket'),
+	}
+}

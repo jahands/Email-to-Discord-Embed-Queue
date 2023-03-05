@@ -5,7 +5,7 @@ import { convert as convertHTML } from 'html-to-text';
 
 import { DISCORD_EMBED_LIMIT, DISCORD_TOTAL_LIMIT } from "./constants"
 import { EmbedQueueData, Env } from './types'
-import { getAuthHeader, getSentry } from "./utils"
+import { getAuthHeader, getDiscordHeaders, getSentry } from "./utils"
 import { logtail, LogLevel } from "./logtail";
 import { getGovDeliveryID, getGovDeliveryStats } from "./govdelivery";
 import pRetry from "p-retry";
@@ -166,13 +166,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 						env, ctx, msg: `Ratelimited! Sleeping for ${resetAfter} seconds...`,
 						level: LogLevel.Info,
 						data: {
-							discordResponseHeaders: {
-								'X-RateLimit-Limit': discordResponse.headers.get('X-RateLimit-Limit'),
-								'X-RateLimit-Remaining': discordResponse.headers.get('X-RateLimit-Remaining'),
-								'X-RateLimit-Reset': discordResponse.headers.get('X-RateLimit-Reset'),
-								'X-RateLimit-Reset-After': discordResponse.headers.get('X-RateLimit-Reset-After'),
-								'X-RateLimit-Bucket': discordResponse.headers.get('X-RateLimit-Bucket'),
-							}
+							discordResponseHeaders: getDiscordHeaders(discordResponse.headers)
 						}
 					})
 					// Adding 50ms because we keep hitting rate limits even after the reset time
@@ -189,11 +183,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 		}
 	}
 	// Log all headers:
-	// console.log('X-RateLimit-Limit', discordResponse.headers.get('X-RateLimit-Limit'))
-	// console.log('X-RateLimit-Remaining', discordResponse.headers.get('X-RateLimit-Remaining'))
-	// console.log('X-RateLimit-Reset', discordResponse.headers.get('X-RateLimit-Reset'))
-	// console.log('X-RateLimit-Reset-After', discordResponse.headers.get('X-RateLimit-Reset-After'))
-	// console.log('X-RateLimit-Bucket', discordResponse.headers.get('X-RateLimit-Bucket'))
+	// console.log(getDiscordHeaders(discordResponse.headers))
 
 	if (!discordResponse.ok) {
 		console.log("Discord Webhook Failed")
@@ -209,13 +199,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 				data: {
 					discordHook: hook,
 					discordResponse: body,
-					discordResponseHeaders: {
-						'X-RateLimit-Limit': discordResponse.headers.get('X-RateLimit-Limit'),
-						'X-RateLimit-Remaining': discordResponse.headers.get('X-RateLimit-Remaining'),
-						'X-RateLimit-Reset': discordResponse.headers.get('X-RateLimit-Reset'),
-						'X-RateLimit-Reset-After': discordResponse.headers.get('X-RateLimit-Reset-After'),
-						'X-RateLimit-Bucket': discordResponse.headers.get('X-RateLimit-Bucket'),
-					}
+					discordResponseHeaders: getDiscordHeaders(discordResponse.headers)
 				}
 			})
 			if (body.retry_after) {
