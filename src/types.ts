@@ -25,6 +25,7 @@ export interface Env {
 	ENVIRONMENT: string
 	LOGTAIL_KEY: string
 	SENTRY_DSN: string
+	SENTRY_RELEASE: string
 }
 
 /** Synced with https://replit.com/@jachands/Email-Worker-Github#src/types.ts */

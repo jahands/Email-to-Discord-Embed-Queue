@@ -16,8 +16,8 @@
     "test": "vitest",
     "start-persist": "wrangler dev --local --persist-to ./data",
     "replit-run-command": "npm run deploy",
-    "publish:wrangler": "wrangler publish",
-    "publish:sentry": "npx sentry-cli sourcemaps upload ./dist/ --release $(git log -1 --pretty=format:%h ) --org personal-use-r9 --project email-to-discord"
+    "publish:wrangler": "wrangler publish --var SENTRY_RELEASE:$(git log -1 --pretty=format:%h)",
+    "publish:sentry": "npx sentry-cli sourcemaps upload ./dist/ --release $(git log -1 --pretty=format:%h) --org personal-use-r9 --project email-to-discord"
   },
   "dependencies": {
     "@jahands/msc-utils": "^0.0.69",

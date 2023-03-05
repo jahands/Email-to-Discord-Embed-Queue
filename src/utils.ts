@@ -36,7 +36,7 @@ export function getSentry(env: Env, ctx: ExecutionContext): Toucan {
 	if (!sentry) {
 		initSentry(env, ctx)
 	}
-	if(!sentry) throw new Error('unable to initSentry')
+	if (!sentry) throw new Error('unable to initSentry')
 	return sentry
 }
 
@@ -44,6 +44,8 @@ export function initSentry(env: Env, ctx: ExecutionContext): Toucan {
 	sentry = new Toucan({
 		dsn: env.SENTRY_DSN,
 		context: ctx,
+		environment: env.ENVIRONMENT,
+		release: env.SENTRY_RELEASE,
 	})
 	return sentry
 }
