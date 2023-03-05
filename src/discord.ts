@@ -86,19 +86,21 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 					govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
 					break // Take first ID we find
 				} catch (e) {
-					if (e instanceof Error) {
-						const sentry = getSentry(env, ctx)
-						sentry.setExtra('email.govdelivery.text', next)
-						sentry.setExtra('email.govdelivery.from', message.from)
-						sentry.setExtra('email.govdelivery.subject', message.subject)
-						sentry.setExtra('email.govdelivery.to', message.to)
-						sentry.setExtra('email.govdelivery.r2path', message.r2path)
-						sentry.setExtra('email.govdelivery.headers', email.headers)
-						logtail({
-							env, ctx, e, msg: 'Failed to get GovDelivery ID: ' + e.message,
-							level: LogLevel.Error,
-						})
-					}
+					const sentry = getSentry(env, ctx)
+					sentry.withScope(scope => {
+						if (e instanceof Error) {
+							scope.setExtra('email.govdelivery.text', next)
+							scope.setExtra('email.govdelivery.from', message.from)
+							scope.setExtra('email.govdelivery.subject', message.subject)
+							scope.setExtra('email.govdelivery.to', message.to)
+							scope.setExtra('email.govdelivery.r2path', message.r2path)
+							scope.setExtra('email.govdelivery.headers', email.headers)
+							logtail({
+								env, ctx, e, msg: 'Failed to get GovDelivery ID: ' + e.message,
+								level: LogLevel.Error,
+							})
+						}
+					})
 				}
 			}
 		}
