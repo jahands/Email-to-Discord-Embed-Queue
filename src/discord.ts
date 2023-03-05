@@ -66,7 +66,6 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 		if (!text || text.trim() === '' || text.trim() === '\n') {
 			text = convertHTML(email.html)
 		}
-		console.log({ emailHeaders: email.headers })
 
 		// Recording some stats here since we're parsing anyway
 		// Don't attempt known non-govdelivery emails
@@ -79,6 +78,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 
 					// First try headers
 					const govDeliveryIDHeader = email.headers.find((h: { key: string, value: string }) => h.key.toLowerCase() === 'x-accountcode')
+					console.log({ govDeliveryIDHeader })
 					if (govDeliveryIDHeader) {
 						govDeliveryID = govDeliveryIDHeader.value
 					} else {
