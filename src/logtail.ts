@@ -1,7 +1,7 @@
 import { Env } from "./types"
 import { getSentry } from "./utils"
 
-/** logtail sends logs to logtail.com */
+/** logtail sends logs to logtail.com and Sentry (except for Debug logs) */
 export function logtail(args: {
 	env: Env,
 	ctx: ExecutionContext,
@@ -14,22 +14,32 @@ export function logtail(args: {
 	if (!data) data = {}
 
 	const sentry = getSentry(env, ctx)
-	sentry.setExtra('data', data)
-	if (level) sentry.setExtra('level', level)
-	sentry.setExtra('msg', msg)
+	if (level !== LogLevel.Debug) {
+		sentry.setExtra('msg', msg)
+		sentry.setExtra('data', data)
+		if (level) {
+			sentry.setExtra('level', level)
+		}
+	}
 
 	if (e) {
-		if (!level) level = LogLevel.Error
+		if (level !== LogLevel.Debug) {)
+			sentry.captureException(e, {
+				data: {
+					msg,
+					...data
+				}
+			})
+		}
+		if (!level) {
+			level = LogLevel.Error
+		}
 
-		sentry.captureException(e, {
-			data: {
-				msg,
-				...data
-			}
-		})
 		data.error = e
 	} else {
-		sentry.captureMessage(msg, level || LogLevel.Info, { data })
+		if (level !== LogLevel.Debug) {
+			sentry.captureMessage(msg, level || LogLevel.Info, { data })
+		}
 	}
 	ctx.waitUntil(fetch("https://in.logtail.com",
 		{
