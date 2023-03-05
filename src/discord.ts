@@ -28,6 +28,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 					sentry.setExtra('email.from', message.from)
 					sentry.setExtra('email.subject', message.subject)
 					sentry.setExtra('email.to', message.to)
+					sentry.setExtra('r2Error', e)
 					throw new Error('Unable to get raw email from R2!! ' + e.message)
 				}
 			}
