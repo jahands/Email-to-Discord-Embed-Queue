@@ -77,7 +77,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 					logtail({
 						env, ctx, msg: 'Attempting to get GovDelivery ID',
 						level: LogLevel.Info, useSentry: false, data: {
-							message
+							message, emailContent: next
 						}
 					})
 					let govDeliveryID = getGovDeliveryID(next)
