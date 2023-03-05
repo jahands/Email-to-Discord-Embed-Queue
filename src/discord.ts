@@ -161,7 +161,6 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 			if (rateLimitResetAfter) {
 				const resetAfter = parseFloat(rateLimitResetAfter)
 				if (resetAfter > 0) {
-					console.log(`Ratelimited! Sleeping for ${resetAfter} seconds...`)
 					logtail({
 						env, ctx, msg: `Ratelimited! Sleeping for ${resetAfter} seconds...`,
 						level: LogLevel.Info,
@@ -185,13 +184,8 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 	// console.log(getDiscordHeaders(discordResponse.headers))
 
 	if (!discordResponse.ok) {
-		console.log("Discord Webhook Failed")
-		console.log(
-			`Discord Response: ${discordResponse.status} ${discordResponse.statusText}`
-		)
 		if (discordResponse.status === 429) {
 			const body = await discordResponse.json() as { retry_after: number | undefined }
-			console.log(body)
 			logtail({
 				env, ctx, msg: 'Ratelimited by discord - sleeping: ' + JSON.stringify(body),
 				level: LogLevel.Warning,
@@ -202,7 +196,6 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 				}
 			})
 			if (body.retry_after) {
-				console.log('sleeping...')
 				await scheduler.wait(body.retry_after * 1000)
 				// retry and give up if it fails again
 				const retryResponse = await sendHook()
@@ -219,14 +212,11 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 			}
 		} else if (discordResponse.status === 400) {
 			const body = await discordResponse.json() as any
-			console.log(body)
 			let logged = false
 			if (Array.isArray(body.embeds)) {
 				for (const embed of body.embeds) {
 					try {
 						const idx = parseInt(embed) // Index of bad embed
-						console.log(`Bad embed at index ${idx}`)
-						console.log(embeds[idx])
 						logtail({
 							env, ctx, msg: `Bad embed at index ${idx} - ` + JSON.stringify(body),
 							level: LogLevel.Error,
@@ -237,8 +227,17 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 							}
 						})
 						logged = true
-					} catch {
-						console.log('unable to parse embed index')
+					} catch (e) {
+						if (e instanceof Error) {
+							logtail({
+								env, ctx, e, msg: `Error parsing embed: ${e.message}`,
+								level: LogLevel.Error,
+								data: {
+									discordHook: hook,
+									embed
+								}
+							})
+						}
 					}
 				}
 			}
