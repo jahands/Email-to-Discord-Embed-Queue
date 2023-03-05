@@ -41,7 +41,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 			sentry.setExtra('email.subject', message.subject)
 			sentry.setExtra('email.to', message.to)
 			sentry.setExtra('rawEmail', rawEmail)
-			const msg = 'Unable to get raw email from R2!! Ignoring skipping this message'
+			const msg = 'Unable to get raw email from R2!! Skipping this message'
 			logtail({ env, ctx, msg, level: LogLevel.Warning })
 			continue
 		}
