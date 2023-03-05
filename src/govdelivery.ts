@@ -66,7 +66,7 @@ export function getGovDeliveryID(emailText: string): string {
   }
 
   if (!id) throw new Error('GovDelivery ID not found')
-  return id
+  return id.trim().toUpperCase()
 }
 
 function getGovDeliveryIDByAccount(emailText: string): string {
@@ -87,13 +87,13 @@ function getGovDeliveryIDByAccount(emailText: string): string {
     }
   }
   if (!id || id === '') throw new Error('GovDelivery ID not found (id)')
-  return id
+  return id.toUpperCase()
 }
 
 function getGovDeliveryIDByFancyImages(emailText: string): string {
   const match = emailText.match(/https*:\/\/((admin\.govdelivery\.com)|(updates\.loc\.gov))\/attachments\/fancy_images\/[a-zA-Z_-]+\//g)
   if (!match || match.length === 0) throw new Error('GovDelivery ID not found (match)')
-  console.log({ match })
+
   const idWithPrefix = match[0].match(/\/attachments\/fancy_images\/[a-zA-Z_-]+\//)
   if (!idWithPrefix || idWithPrefix.length === 0) throw new Error('GovDelivery ID not found (idWithPrefix)')
 
@@ -106,5 +106,5 @@ function getGovDeliveryIDByFancyImages(emailText: string): string {
     }
   }
   if (!id || id === '') throw new Error('GovDelivery ID not found (id)')
-  return id
+  return id.toUpperCase()
 }

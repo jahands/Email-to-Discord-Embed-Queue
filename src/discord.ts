@@ -80,7 +80,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 					const govDeliveryIDHeader = email.headers.find((h: { key: string, value: string }) => h.key.toLowerCase() === 'x-accountcode')
 					console.log({ govDeliveryIDHeader })
 					if (govDeliveryIDHeader) {
-						govDeliveryID = govDeliveryIDHeader.value
+						govDeliveryID = govDeliveryIDHeader.value.trim().toUpperCase()
 					} else {
 						govDeliveryID = getGovDeliveryID(next)
 					}
