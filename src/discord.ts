@@ -7,7 +7,7 @@ import { EmbedQueueData, Env } from './types'
 import { getAuthHeader, getDiscordHeaders, getSentry, waitForDiscordReset } from "./utils"
 import { logtail, LogLevel } from "./logtail";
 import { getGovDeliveryID, getGovDeliveryStats } from "./govdelivery";
-import pRetry from "p-retry";
+import pRetry, { AbortError } from "p-retry";
 
 /** Sends multiple embeds with no .txt fallback */
 export async function sendDiscordEmbeds(messages: EmbedQueueData[],
@@ -30,7 +30,7 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 						sentry.setExtra('email.subject', message.subject)
 						sentry.setExtra('email.to', message.to)
 						sentry.setExtra('r2Error', e)
-						throw e
+						throw new AbortError(e)
 					}
 				}
 			})
