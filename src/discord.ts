@@ -69,27 +69,23 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 
 		// Recording some stats here since we're parsing anyway
 		// Don't attempt known non-govdelivery emails
+		// May have already been recorded by email worker - this is
+		// a fallback if it was missing a header
 		const govIDBlocklist = ['fbi@subscriptions.fbi.gov']
-		if (message.to === 'usa-gov-lists@eemailme.com' && !govIDBlocklist.includes(message.from)) {
+		if (message.shouldCheckGovDelivery &&
+			message.to === 'usa-gov-lists@eemailme.com' && !govIDBlocklist.includes(message.from)) {
 			for (const next of [text, email.text, email.html]) {
 				if (!next) continue
 				try {
-					let govDeliveryID: string | undefined
-
-					// First try headers
-					const govDeliveryIDHeader = email.headers.find((h: { key: string, value: string }) => h.key.toLowerCase() === 'x-accountcode')
-					console.log({ govDeliveryIDHeader })
-					if (govDeliveryIDHeader) {
-						govDeliveryID = govDeliveryIDHeader.value.trim().toUpperCase()
-					}
-					if (!govDeliveryID) {
-						govDeliveryID = getGovDeliveryID(next)
-					}
-
-					// Otherwise use body
+					logtail({
+						env, ctx, msg: 'Attempting to get GovDelivery ID', level: LogLevel.Debug, data: {
+							message
+						}
+					})
+					let govDeliveryID = getGovDeliveryID(next)
 					if (!govDeliveryID) throw new Error('No GovDelivery ID found')
-					govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
 
+					govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
 					break // Take first ID we find
 				} catch (e) {
 					if (e instanceof Error) {
