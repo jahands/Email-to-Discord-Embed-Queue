@@ -8,13 +8,22 @@ export function logtail(args: {
 	msg: string,
 	level?: LogLevel,
 	data?: any,
-	e?: Error
+	e?: Error,
+	useSentry?: boolean,
 }) {
-	let { env, ctx, msg, level, data, e } = args
+	let { env, ctx, msg, level, data, e, useSentry } = args
 	if (!data) data = {}
+	
+	if (useSentry === undefined) {
+		if (level === LogLevel.Debug) {
+			useSentry = false
+		} else {
+			useSentry = true
+		}
+	}
 
 	const sentry = getSentry(env, ctx)
-	if (level !== LogLevel.Debug) {
+	if (useSentry) {
 		sentry.setExtra('msg', msg)
 		sentry.setExtra('data', data)
 		if (level) {
@@ -23,7 +32,7 @@ export function logtail(args: {
 	}
 
 	if (e) {
-		if (level !== LogLevel.Debug) {
+		if (useSentry) {
 			sentry.captureException(e, {
 				data: {
 					msg,
@@ -37,7 +46,7 @@ export function logtail(args: {
 
 		data.error = e
 	} else {
-		if (level !== LogLevel.Debug) {
+		if (useSentry) {
 			sentry.captureMessage(msg, level || LogLevel.Info, { data })
 		}
 	}

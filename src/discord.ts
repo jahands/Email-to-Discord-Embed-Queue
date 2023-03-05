@@ -75,7 +75,8 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 				if (!next) continue
 				try {
 					logtail({
-						env, ctx, msg: 'Attempting to get GovDelivery ID', level: LogLevel.Debug, data: {
+						env, ctx, msg: 'Attempting to get GovDelivery ID',
+						level: LogLevel.Info, useSentry: false, data: {
 							message
 						}
 					})
