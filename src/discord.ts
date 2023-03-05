@@ -172,7 +172,8 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 			const body = await discordResponse.json() as { retry_after: number | undefined }
 			logtail({
 				env, ctx, msg: 'Ratelimited by discord - sleeping: ' + JSON.stringify(body),
-				level: LogLevel.Warning,
+				useSentry: false, // No way to fix this
+				level: LogLevel.Info,
 				data: {
 					discordHook: hook,
 					discordResponse: body,
