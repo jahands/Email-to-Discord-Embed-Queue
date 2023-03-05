@@ -34,7 +34,16 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 			}
 		})
 		if (!rawEmail) {
-			throw new Error('Unable to get raw email from R2!!')
+			// Ignore this message but log to sentry
+			const sentry = getSentry(env, ctx)
+			sentry.setExtra('email.r2path', message.r2path)
+			sentry.setExtra('email.from', message.from)
+			sentry.setExtra('email.subject', message.subject)
+			sentry.setExtra('email.to', message.to)
+			sentry.setExtra('rawEmail', rawEmail)
+			const msg = 'Unable to get raw email from R2!! Ignoring skipping this message'
+			logtail({ env, ctx, msg, level: LogLevel.Warning })
+			continue
 		}
 		const arrayBuffer = await rawEmail.arrayBuffer()
 		const parser = new PostalMime()
@@ -185,7 +194,7 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 			console.log(body)
 			logtail({
 				env, ctx, msg: 'Ratelimited by discord - sleeping: ' + JSON.stringify(body),
-				level: LogLevel.Warn,
+				level: LogLevel.Warning,
 				data: {
 					discordHook: hook,
 					discordResponse: body

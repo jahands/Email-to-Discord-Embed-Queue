@@ -19,6 +19,8 @@ export function logtail(args: {
 	sentry.setExtra('msg', msg)
 
 	if (e) {
+		if (!level) level = LogLevel.Error
+
 		sentry.captureException(e, {
 			data: {
 				msg,
@@ -49,7 +51,7 @@ export function logtail(args: {
 export enum LogLevel {
 	Debug = "debug",
 	Info = "info",
-	Warn = "warning",
+	Warning = "warning",
 	Error = "error",
 	Fatal = "fatal",
 	Log = "log"
