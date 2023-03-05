@@ -86,10 +86,10 @@ export default {
 			}
 
 			// Write to AE
-			logtail({
-				env, ctx, msg: 'Writing Discord stats to AE', data: { statsByHook },
-				useSentry: false, level: LogLevel.Debug
-			})
+			// logtail({
+			// 	env, ctx, msg: 'Writing Discord stats to AE', data: { statsByHook },
+			// 	useSentry: false, level: LogLevel.Debug
+			// })
 			for (const hookName of Object.keys(statsByHook)) {
 				const stat = statsByHook[hookName]
 				try {
