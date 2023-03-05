@@ -1,11 +1,10 @@
 // @ts-ignore no @types :(
 import PostalMime from "postal-mime"
 import { convert as convertHTML } from 'html-to-text';
-// import { ThrottledQueue } from '@jahands/msc-utils'
 
 import { DISCORD_EMBED_LIMIT, DISCORD_TOTAL_LIMIT } from "./constants"
 import { EmbedQueueData, Env } from './types'
-import { getAuthHeader, getDiscordHeaders, getSentry } from "./utils"
+import { getAuthHeader, getDiscordHeaders, getSentry, waitForDiscordReset } from "./utils"
 import { logtail, LogLevel } from "./logtail";
 import { getGovDeliveryID, getGovDeliveryStats } from "./govdelivery";
 import pRetry from "p-retry";
@@ -136,50 +135,21 @@ export async function sendDiscordEmbeds(messages: EmbedQueueData[],
 	}
 }
 
-// Turning off throttling for now because we have proper rate limit handling
-// const throttledQueue = new ThrottledQueue({ concurrency: 1, interval: 1000, limit: 1 });
-
 async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string, embeds: any[]) {
 	// Send the embeds
 	const embedBody = JSON.stringify({ embeds })
 	const formData = new FormData()
 	formData.append("payload_json", embedBody)
 	const sendHook = async () => {
-		// await throttledQueue.add(async () => { }) // Rate limit ourselves
-		return fetch(hook, {
+		const res = await fetch(hook, {
 			method: "POST",
 			body: formData,
 			headers: getAuthHeader(env)
 		})
+		await waitForDiscordReset(res) // Rate limit ourselves
+		return res
 	}
 	const discordResponse = await sendHook()
-	// Try to preimptively ratelimit if needed
-	try {
-		const rateLimitRemaining = discordResponse.headers.get('X-RateLimit-Remaining')
-		if (rateLimitRemaining && parseFloat(rateLimitRemaining) < 1) { // Maybe it returns less than 1 but > 0?
-			const rateLimitResetAfter = discordResponse.headers.get('X-RateLimit-Reset-After')
-			if (rateLimitResetAfter) {
-				const resetAfter = parseFloat(rateLimitResetAfter)
-				if (resetAfter > 0) {
-					logtail({
-						env, ctx, msg: `Ratelimited! Sleeping for ${resetAfter} seconds...`,
-						level: LogLevel.Info,
-						data: {
-							discordResponseHeaders: getDiscordHeaders(discordResponse.headers)
-						}
-					})
-					await scheduler.wait(resetAfter * 1000)
-				}
-			}
-		}
-	} catch (e) {
-		if (e instanceof Error) {
-			logtail({
-				env, ctx, e, msg: `Failed to preimptively avoid ratelimits: ${e.message}`,
-				level: LogLevel.Error,
-			})
-		}
-	}
 	// Log all headers:
 	// console.log(getDiscordHeaders(discordResponse.headers))
 
@@ -197,20 +167,20 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 			})
 			if (body.retry_after) {
 				await scheduler.wait(body.retry_after * 1000)
-				// retry and give up if it fails again
-				const retryResponse = await sendHook()
-				if (!retryResponse.ok) {
-					logtail({
-						env, ctx, msg: `Failed after 1 retry, giving up: ${JSON.stringify(body)}`,
-						level: LogLevel.Error,
-						data: {
-							discordHook: hook,
-							discordResponse: body,
-							discordResponseHeaders: getDiscordHeaders(discordResponse.headers),
-							discordRetryResponseHeaders: getDiscordHeaders(retryResponse.headers)
-						}
-					})
-				}
+			}
+			// retry and give up if it fails again
+			const retryResponse = await sendHook()
+			if (!retryResponse.ok) {
+				logtail({
+					env, ctx, msg: `Failed after 1 retry, giving up: ${JSON.stringify(body)}`,
+					level: LogLevel.Error,
+					data: {
+						discordHook: hook,
+						discordResponse: body,
+						discordResponseHeaders: getDiscordHeaders(discordResponse.headers),
+						discordRetryResponseHeaders: getDiscordHeaders(retryResponse.headers)
+					}
+				})
 			}
 		} else if (discordResponse.status === 400) {
 			const body = await discordResponse.json() as any
@@ -232,11 +202,12 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 					} catch (e) {
 						if (e instanceof Error) {
 							logtail({
-								env, ctx, e, msg: `Error parsing embed: ${e.message}`,
+								env, ctx, e, msg: `Error parsing embed index: ${e.message}`,
 								level: LogLevel.Error,
 								data: {
 									discordHook: hook,
-									embed
+									embedIndex: embed,
+									discordResponse: body
 								}
 							})
 						}

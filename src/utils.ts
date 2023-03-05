@@ -59,3 +59,15 @@ export function getDiscordHeaders(headers: Headers) {
 		'X-RateLimit-Bucket': headers.get('X-RateLimit-Bucket'),
 	}
 }
+
+export async function waitForDiscordReset(response: Response): Promise<void> {
+	const headers = response.headers
+	const remaining = headers.get('X-RateLimit-Remaining')
+	if (!remaining || parseFloat(remaining) >= 1) return
+
+	const resetAfterSeconds = headers.get('X-RateLimit-Reset-After')
+	if (!resetAfterSeconds) return
+
+	const resetAfterMs = parseFloat(resetAfterSeconds) * 1000
+	await scheduler.wait(resetAfterMs)
+}
