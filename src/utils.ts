@@ -2,6 +2,16 @@ import { Toucan } from 'toucan-js'
 import { Env } from './types'
 
 export async function getDiscordWebhook(from: string, to: string, env: Env): Promise<{ name: string, hook: string }> {
+	const bulk = {
+		to: [] as string[],
+		from: ['alerts@weatherusa.net'],
+		fromEndsWith: [
+			'@alerts.craigslist.org',
+			'.discoursemail.com',
+			'@em.atlassian.com'
+		]
+	}
+
 	if (from === 'noreply@github.com'
 		|| from === 'notifications@github.com'
 		|| from.endsWith('@sgmail.github.com')
@@ -15,6 +25,12 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 		return { hook: env.GOOGLEALERTSHOOK, name: 'google_alerts' }
 	} else if (to === 'usa-gov-lists@eemailme.com') {
 		return { hook: env.GOVHOOK, name: 'gov-lists' }
+	} else if (
+		bulk.to.includes(to) ||
+		bulk.from.includes(from) ||
+		bulk.fromEndsWith.some(s => from.endsWith(s))
+	) {
+		return { hook: env.BULKHOOK, name: 'bulk' }
 	}
 	return { hook: env.DISCORDHOOK, name: 'default' }
 }
