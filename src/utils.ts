@@ -8,7 +8,8 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 		fromEndsWith: [
 			'@alerts.craigslist.org',
 			'.discoursemail.com',
-			'@em.atlassian.com'
+			'@em.atlassian.com',
+			'@linustechtips.com'
 		]
 	}
 
