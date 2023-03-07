@@ -9,7 +9,8 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'@alerts.craigslist.org',
 			'.discoursemail.com',
 			'@em.atlassian.com',
-			'@linustechtips.com'
+			'@linustechtips.com',
+			'@googlegroups.com',
 		]
 	}
 
