@@ -11,6 +11,7 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'@em.atlassian.com',
 			'@linustechtips.com',
 			'@googlegroups.com',
+			'@forum.rclone.org',
 		]
 	}
 
