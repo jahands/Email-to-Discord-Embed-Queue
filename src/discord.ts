@@ -54,6 +54,7 @@ export async function getDiscordEmbedBatches(
 			rawEmail = await pRetry(async () => {
 				const res = await env.R2EMAILS.get(message.body.r2path)
 				if (res === null) {
+					await scheduler.wait(1000)
 					throw new Error('R2 returned null, maybe it\'s not available yet due to a race condition?')
 				}
 				return res
@@ -66,7 +67,6 @@ export async function getDiscordEmbedBatches(
 						sentry.setExtra('email.subject', message.body.subject)
 						sentry.setExtra('email.to', message.body.to)
 						sentry.setExtra('r2Error', e)
-						throw new AbortError(e)
 					}
 				}
 			})
@@ -105,7 +105,7 @@ export async function getDiscordEmbedBatches(
 		}
 
 		// BEGIN GOVDELIVERY STATS
-	
+
 		// Recording some stats here since we're parsing anyway
 		// May have already been recorded by email worker - this is
 		// a fallback if it was missing a header
