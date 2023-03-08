@@ -36,6 +36,8 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'.officedepot.com',
 			'.propublica.net',
 			'.nytimes.com',
+			'@cmail20.com', // wsj.com
+			'.cbssports.com',
 		]
 	}
 
