@@ -129,7 +129,7 @@ export function getDiscordHeaders(headers: Headers) {
 export async function waitForDiscordReset(response: Response): Promise<void> {
 	// Try to avoid ratelimiting constantly
 	const rateLimiter = getRateLimiter()
-	if (rateLimiter.rateLimitedCount > 3) {
+	if (rateLimiter.rateLimitedCount >= 3) {
 		console.log('waiting extra!!')
 		await scheduler.wait(1700)
 	}
