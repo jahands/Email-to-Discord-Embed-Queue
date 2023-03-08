@@ -100,7 +100,7 @@ export async function getDiscordEmbedBatches(
 			headers: { key: string, value: string }[]
 		}
 		let text = email.text
-		if (!text || text.trim() === '' || text.trim() === '\n') {
+		if (!text || ['', '\n', '&nbsp;'].includes(text.trim())) {
 			text = convertHTML(email.html)
 		}
 
