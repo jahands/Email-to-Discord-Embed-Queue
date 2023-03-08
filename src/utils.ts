@@ -3,8 +3,16 @@ import { Env } from './types'
 
 export async function getDiscordWebhook(from: string, to: string, env: Env): Promise<{ name: string, hook: string }> {
 	const bulk = {
-		to: ['rorymonroe@eemailme.com'],
-		from: ['alerts@weatherusa.net'],
+		to: [
+			'rorymonroe@eemailme.com',
+			'terraria@eemailme.com',
+			'flyaf@eemailme.com',
+
+		],
+		from: [
+			'alerts@weatherusa.net',
+			'everyone@enron.email'
+		],
 		fromEndsWith: [
 			'@alerts.craigslist.org',
 			'.discoursemail.com',
@@ -13,6 +21,16 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'@googlegroups.com',
 			'@forum.rclone.org',
 			'@chromium.org',
+			'@newsletters.cnn.com',
+			'@bounce.buzzfeed.com',
+			'@launchpad.net',
+			'.substack.com',
+			'@latest.newsmax.com',
+			'.groupon.com',
+			'.theinformation.com',
+			'.theguardian.com',
+			'@email.paireyewear.com',
+			'@notifications.arstechnica.com',
 		]
 	}
 
