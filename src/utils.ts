@@ -12,7 +12,6 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'nbc-news@eemailme.com',
 		],
 		from: [
-			'alerts@weatherusa.net',
 			'everyone@enron.email'
 		],
 		fromEndsWith: [
@@ -63,6 +62,8 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 		bulk.fromEndsWith.some(s => from.endsWith(s))
 	) {
 		return { hook: env.BULKHOOK, name: 'bulk' }
+	} else if (from === 'alerts@weatherusa.net') {
+		return { hook: env.WEATHERHOOK, name: 'weather' }
 	}
 	return { hook: env.DISCORDHOOK, name: 'default' }
 }

@@ -19,6 +19,7 @@ export interface Env {
 	GOOGLEALERTSHOOK: string
 	GOVHOOK: string
 	BULKHOOK: string
+	WEATHERHOOK: string
 	R2EMAILS: R2Bucket
 	BOTTOKEN: string // Discord bot token to improve ratelimits
 	EMBEDSTATS: AnalyticsEngineDataset
