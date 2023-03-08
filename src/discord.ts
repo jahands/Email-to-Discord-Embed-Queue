@@ -4,7 +4,7 @@ import { convert as convertHTML } from 'html-to-text';
 
 import { DISCORD_EMBED_LIMIT, DISCORD_TOTAL_LIMIT } from "./constants"
 import { EmbedQueueData, Env } from './types'
-import { getAuthHeader, getDiscordHeaders, getSentry, waitForDiscordReset } from "./utils"
+import { getAuthHeader, getDiscordHeaders, getRateLimiter, getSentry, waitForDiscordReset } from "./utils"
 import { logtail, LogLevel } from "./logtail";
 import { getGovDeliveryID, getGovDeliveryStats } from "./govdelivery";
 import pRetry, { AbortError } from "p-retry";
@@ -329,6 +329,8 @@ export async function sendDiscordBatch(
 // }
 
 async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string, embeds: DiscordEmbed[]) {
+	const rateLimiter = getRateLimiter()
+
 	// Send the embeds
 	const embedBody = JSON.stringify({ embeds })
 	const formData = new FormData()
@@ -346,8 +348,14 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 	// Log all headers:
 	// console.log(getDiscordHeaders(discordResponse.headers))
 
-	if (!discordResponse.ok) {
+	if (discordResponse.ok) {
+		if (rateLimiter.rateLimitedCount > 0) {
+			rateLimiter.rateLimitedCount -= 0.25
+		}
+	} else {
 		if (discordResponse.status === 429) {
+			rateLimiter.rateLimitedCount++
+			console.log({ rateLimiter })
 			const body = await discordResponse.json() as { retry_after: number | undefined }
 			logtail({
 				env, ctx, msg: 'Ratelimited by discord - sleeping: ' + JSON.stringify(body),

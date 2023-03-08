@@ -103,6 +103,19 @@ export function initSentry(env: Env, ctx: ExecutionContext): Toucan {
 	return sentry
 }
 
+let rateLimiter: { rateLimitedCount: number } | undefined
+export function initRateLimiter(): void {
+	rateLimiter = { rateLimitedCount: 0 }
+}
+
+export function getRateLimiter(): { rateLimitedCount: number } {
+	if (!rateLimiter) {
+		initRateLimiter()
+	}
+	if (!rateLimiter) throw new Error('unable to initRateLimiter')
+	return rateLimiter
+}
+
 export function getDiscordHeaders(headers: Headers) {
 	return {
 		'X-RateLimit-Limit': headers.get('X-RateLimit-Limit'),
@@ -114,6 +127,13 @@ export function getDiscordHeaders(headers: Headers) {
 }
 
 export async function waitForDiscordReset(response: Response): Promise<void> {
+	// Try to avoid ratelimiting constantly
+	const rateLimiter = getRateLimiter()
+	if (rateLimiter.rateLimitedCount > 3) {
+		console.log('waiting extra!!')
+		await scheduler.wait(1700)
+	}
+
 	const headers = response.headers
 	const remaining = headers.get('X-RateLimit-Remaining')
 	if (!remaining || parseFloat(remaining) >= 1) return

@@ -3,12 +3,13 @@ import { Batch, getDiscordEmbedBatches, sendDiscordBatch } from './discord';
 import { initGovDeliveryStats, recordGovDeliveryStats } from './govdelivery';
 import { logtail, LogLevel } from './logtail';
 import { EmbedQueueData, Env } from './types'
-import { getDiscordWebhook, initSentry } from './utils';
+import { getDiscordWebhook, initRateLimiter, initSentry } from './utils';
 
 export default {
 	async queue(batch: MessageBatch<EmbedQueueData>, env: Env, ctx: ExecutionContext) {
 		const sentry = initSentry(env, ctx)
 		initGovDeliveryStats()
+		initRateLimiter()
 
 		try {
 			sentry.setExtra('batch.messages.length', batch.messages.length)
