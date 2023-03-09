@@ -42,6 +42,9 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'@cmail19.com', // wsj.com
 			'.cbssports.com',
 			'@email.caddyserver.com',
+			'@email.medium.com',
+			'.lifehacker.com',
+			'.benzinga.com',
 		]
 	}
 
