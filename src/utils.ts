@@ -64,7 +64,7 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 	} else if (from.endsWith('@alerts.bounces.google.com')) {
 		return { hook: env.GOOGLEALERTSHOOK, name: 'google_alerts' }
 	} else if ([
-		'usa-gov-lists@eemailme.com', 'uscis@eemailme.com', 'dol@eemailme.com', 'fda@eemailme.com'
+		'usa-gov-lists@eemailme.com', 'uscis@eemailme.com', 'dol@eemailme.com', 'fda@eemailme.com', 'uk-gov-lists@eemailme.com'
 	].includes(to)) {
 		return { hook: env.GOVHOOK, name: 'gov-lists' }
 	} else if (
