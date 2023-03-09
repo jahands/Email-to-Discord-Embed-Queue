@@ -53,6 +53,7 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'.cbinsights.com',
 			'@ebay.com',
 			'.tldrnewsletter.com',
+			'.freecryptorewards.com',
 		]
 	}
 
