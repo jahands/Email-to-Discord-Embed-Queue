@@ -12,6 +12,7 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'nbc-news@eemailme.com',
 			'crooked@eemailme.com', // crooked.com newsletter
 			'reddit.com@eemailme.com',
+			'tech@eemailme.com',
 		],
 		from: [
 			'everyone@enron.email'
@@ -50,6 +51,8 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'.grabagun.com',
 			'.appsumo.com',
 			'.cbinsights.com',
+			'@ebay.com',
+			'.tldrnewsletter.com',
 		]
 	}
 
