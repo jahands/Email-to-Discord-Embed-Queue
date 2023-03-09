@@ -46,6 +46,7 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'.lifehacker.com',
 			'.benzinga.com',
 			'@ubuntuforums.org',
+			'@lists.ubuntu.com',
 			'.grabagun.com',
 			'.appsumo.com',
 			'.cbinsights.com',
