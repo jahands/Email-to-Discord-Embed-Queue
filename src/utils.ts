@@ -55,6 +55,7 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'.tldrnewsletter.com',
 			'.freecryptorewards.com',
 			'.rd.com',
+			'.biblegateway.com',
 		]
 	}
 
