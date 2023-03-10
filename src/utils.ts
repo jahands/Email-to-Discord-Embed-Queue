@@ -15,6 +15,8 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'tech@',
 			'19thnews@',
 			'nbcsports@',
+			'today.com@',
+			'msnbc@',
 		],
 		from: [
 			'everyone@enron.email'
@@ -68,7 +70,20 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'.cbsnews.com',
 			'.shopify.com',
 			'.divenewsletter.com',
-		]
+			'.cnn.com',
+			'.thegistsports.com',
+			'.healthline.com',
+			'.thehustle.co',
+			'.flipboard.com',
+			'.target.com',
+			'.slickdeals.net',
+			'.theskimm.com',
+			'.jcrew.com',
+			'.food.com',
+		],
+		fromRegex: [
+			/microsoft\.start@\w+\.microsoft.com/, // eg. microsoft.start@email2.microsoft.com
+		],
 	}
 
 	if (from === 'noreply@github.com'
@@ -89,7 +104,8 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 	} else if (
 		bulk.to.some(s => to.startsWith(s)) ||
 		bulk.from.includes(from) ||
-		bulk.fromEndsWith.some(s => from.endsWith(s))
+		bulk.fromEndsWith.some(s => from.endsWith(s)) ||
+		bulk.fromRegex.some(re => re.test(from))
 	) {
 		return { hook: env.BULKHOOK, name: 'bulk' }
 	} else if (from === 'alerts@weatherusa.net') {
