@@ -4,15 +4,17 @@ import { Env } from './types'
 export async function getDiscordWebhook(from: string, to: string, env: Env): Promise<{ name: string, hook: string }> {
 	const bulk = {
 		to: [
-			'rorymonroe@eemailme.com',
-			'terraria@eemailme.com',
-			'flyaf@eemailme.com',
-			'bloomberg@eemailme.com',
-			'steelersdepot@eemailme.com',
-			'nbc-news@eemailme.com',
-			'crooked@eemailme.com', // crooked.com newsletter
-			'reddit.com@eemailme.com',
-			'tech@eemailme.com',
+			'rorymonroe@',
+			'terraria@',
+			'flyaf@',
+			'bloomberg@',
+			'steelersdepot@',
+			'nbc-news@',
+			'crooked@', // crooked.com newsletter
+			'reddit.com@',
+			'tech@',
+			'19thnews@',
+			'nbcsports@',
 		],
 		from: [
 			'everyone@enron.email'
@@ -56,6 +58,16 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'.freecryptorewards.com',
 			'.rd.com',
 			'.biblegateway.com',
+			'@blu-ray.com',
+			'.thuma.co',
+			'.nectarsleep.com',
+			'.mindfieldonline.com',
+			'.time.com',
+			'.morningbrew.com',
+			'.theatlantic.com',
+			'.cbsnews.com',
+			'.shopify.com',
+			'.divenewsletter.com',
 		]
 	}
 
@@ -71,11 +83,11 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 	} else if (from.endsWith('@alerts.bounces.google.com')) {
 		return { hook: env.GOOGLEALERTSHOOK, name: 'google_alerts' }
 	} else if ([
-		'usa-gov-lists@eemailme.com', 'uscis@eemailme.com', 'dol@eemailme.com', 'fda@eemailme.com', 'uk-gov-lists@eemailme.com'
-	].includes(to)) {
+		'usa-gov-lists@', 'uscis@', 'dol@', 'fda@', 'uk-gov-lists@'
+	].some(s => to.startsWith(s))) {
 		return { hook: env.GOVHOOK, name: 'gov-lists' }
 	} else if (
-		bulk.to.includes(to) ||
+		bulk.to.some(s => to.startsWith(s)) ||
 		bulk.from.includes(from) ||
 		bulk.fromEndsWith.some(s => from.endsWith(s))
 	) {
