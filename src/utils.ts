@@ -67,8 +67,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 
 function isGerrit(from: string) {
 	const fromRe = [
-		/^postmaster@mail[a-z0-9-]*\.google\.com$/, // most gerrit
-		/^chromium-reviews\+\w+@chromium\.org$/, // chromium gerrit
+		/^noreply-gerritcodereview-\w+=+@chromium\.org$/,
 	]
 	return fromRe.some(re => re.test(from))
 }
