@@ -6,19 +6,6 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 	const fromHeader = parseFromEmailHeader(data.rawFromHeader)
 	const bulk = {
 		to: [
-			'rorymonroe@',
-			'terraria@',
-			'flyaf@',
-			'bloomberg@',
-			'steelersdepot@',
-			'nbc-news@',
-			'crooked@', // crooked.com newsletter
-			'reddit.com@',
-			'tech@',
-			'19thnews@',
-			'nbcsports@',
-			'today.com@',
-			'msnbc@',
 		],
 		fromAddress: [
 			'everyone@enron.email',
@@ -29,6 +16,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 		fromAddressEndsWith: [
 			'.freecryptorewards.com',
 			'@arstechnica.com',
+			'@stackoverflow.email',
 		],
 		fromAddressRegex: [
 			/^notifications@\w+\.discoursemail\.com$/,
