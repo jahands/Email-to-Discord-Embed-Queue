@@ -17,7 +17,6 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'access@interactive.wsj.com',
 		],
 		fromAddressEndsWith: [
-			'.freecryptorewards.com',
 			'@arstechnica.com',
 			'@stackoverflow.email',
 			'@em.atlassian.com',
@@ -27,12 +26,50 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'@substack.com',
 			'@e.newscientist.com',
 			'.camaro5.com',
-			'@1xbit.com', // crypto
+			'@dailyhodl.com',
 			'@terraria.org',
+			'@atlasobscura.com',
+			'.beehiiv.com',
+			'@atlasobscura.com',
+			'.foodnetwork.com',
+			'@theinformation.com',
+			'.theskimm.com',
+			'@creatorwizard.com',
+			'.sltrib.com', // salt lake tribune
+			'@steelersdepot.com',
+			'.msnbc.com',
+			'@flylady.net',
+			'@technologyreview.com',
+			'.biblegateway.com',
+			'@forum.rclone.org',
+			'.theguardian.com',
+			'@buzzfeed.com',
+			'@nectarsleep.com',
+			'.newsmax.com',
+			'.cnn.com',
+			'@ebay.com',
+			'@theinformation.com',
+			'@divenewsletter.com',
+			'.groupon.com',
+			'@nytimes.com',
+			'@games4grandma.com', // wholesome tbh
+			'@atlasobscura.com',
+			'.rd.com',
+			'.itprotoday.com',
+			'.time.com',
+			'.nbcchicago.com',
 		],
 		fromAddressRegex: [
 			/^notifications@[\w-]+\.discoursemail\.com$/,
 		],
+	}
+
+	const sus = {
+		fromAddressEndsWith: [
+			'@benzinga.com', // stocks
+			'.freecryptorewards.com',
+			'@1xbit.com', // crypto
+		]
 	}
 
 	if (fromHeader.address === 'notifications@github.com') {
@@ -60,6 +97,11 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 	) {
 		return { hook: env.BULKHOOK, name: 'bulk' }
 
+	} else if (
+		sus.fromAddressEndsWith.some(s => fromHeader.address.endsWith(s))
+	) {
+		return { hook: env.SUSHOOK, name: 'sus' }
+
 	} else if (fromHeader.address === 'alerts@weatherusa.net') {
 		return { hook: env.WEATHERHOOK, name: 'weather' }
 	}
@@ -70,6 +112,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 function isGerrit(from: string) {
 	const fromRe = [
 		/^noreply-gerritcodereview-[\w-]+=+@chromium\.org$/,
+		/^jenkinsci-commits@googlegroups\.com$/ // not Gerrit but feels similar
 	]
 	return fromRe.some(re => re.test(from))
 }
