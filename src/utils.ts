@@ -28,6 +28,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 		],
 		fromAddressEndsWith: [
 			'.freecryptorewards.com',
+			'@arstechnica.com',
 		],
 		fromAddressRegex: [
 			/^notifications@\w+\.discoursemail\.com$/,
