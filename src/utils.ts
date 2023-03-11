@@ -59,6 +59,9 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'.time.com',
 			'.nbcchicago.com',
 			'.cbsnews.com',
+			'@ayushchat.com', // almost sus
+			'.today.com',
+
 		],
 		fromAddressRegex: [
 			/^notifications@[\w-]+\.discoursemail\.com$/,
@@ -113,7 +116,8 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 function isGerrit(from: string) {
 	const fromRe = [
 		/^noreply-gerritcodereview-[\w-]+=+@chromium\.org$/,
-		/^jenkinsci-commits@googlegroups\.com$/ // not Gerrit but feels similar
+		/^jenkinsci-commits@googlegroups\.com$/, // not Gerrit but feels similar
+		/^.*@chromium\.org$/, // might not be Gerrit, but feels similar
 	]
 	return fromRe.some(re => re.test(from))
 }
