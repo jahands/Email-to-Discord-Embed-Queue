@@ -29,7 +29,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 		fromAddressEndsWith: [
 		],
 		fromAddressRegex: [
-			/notifications@\w+\.discoursemail\.com/,
+			/^notifications@\w+\.discoursemail\.com$/,
 		],
 	}
 
@@ -54,7 +54,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 		bulk.to.some(s => data.to.startsWith(s)) ||
 		bulk.fromAddress.includes(fromHeader.address) ||
 		bulk.fromAddressEndsWith.some(s => fromHeader.address.endsWith(s)) ||
-		bulk.fromAddressRegex.some(re => re.test(data.from))
+		bulk.fromAddressRegex.some(re => re.test(fromHeader.address))
 	) {
 		return { hook: env.BULKHOOK, name: 'bulk' }
 
