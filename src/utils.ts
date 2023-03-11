@@ -28,6 +28,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'@e.newscientist.com',
 			'.camaro5.com',
 			'@1xbit.com', // crypto
+			'@terraria.org',
 		],
 		fromAddressRegex: [
 			/^notifications@[\w-]+\.discoursemail\.com$/,
