@@ -21,6 +21,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'@stackoverflow.email',
 			'@em.atlassian.com',
 			'@grabagun.com',
+			'.grabagun.com',
 			'@blu-ray.com',
 			'@bugs.launchpad.net',
 			'@substack.com',
@@ -62,6 +63,11 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'@ayushchat.com', // almost sus
 			'.today.com',
 			'.nbcnews.com',
+			'@iphonephotographyschool.com', // selling courses
+			'@thehustle.co',
+			'.bloombergbusiness.com',
+			'.milkroad.com',
+			'@decryptmedia.com',
 		],
 		fromAddressRegex: [
 			/^notifications@[\w-]+\.discoursemail\.com$/,
