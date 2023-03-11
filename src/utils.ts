@@ -12,6 +12,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'alerts@alerts.craigslist.org',
 			'noreply@caddy.community',
 			'do.not.reply@linustechtips.com',
+			'subscriptions@medium.com',
 		],
 		fromAddressEndsWith: [
 			'.freecryptorewards.com',
