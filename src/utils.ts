@@ -14,6 +14,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'do.not.reply@linustechtips.com',
 			'subscriptions@medium.com',
 			'forum@linuxquestions.org',
+			'access@interactive.wsj.com',
 		],
 		fromAddressEndsWith: [
 			'.freecryptorewards.com',
@@ -24,6 +25,8 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'@blu-ray.com',
 			'@bugs.launchpad.net',
 			'@substack.com',
+			'@e.newscientist.com',
+			'.camaro5.com',
 		],
 		fromAddressRegex: [
 			/^notifications@[\w-]+\.discoursemail\.com$/,
