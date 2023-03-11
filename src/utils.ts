@@ -69,7 +69,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 
 function isGerrit(from: string) {
 	const fromRe = [
-		/^noreply-gerritcodereview-\w+=+@chromium\.org$/,
+		/^noreply-gerritcodereview-[\w-]+=+@chromium\.org$/,
 	]
 	return fromRe.some(re => re.test(from))
 }
