@@ -21,12 +21,13 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'msnbc@',
 		],
 		fromAddress: [
-			'everyone@enron.email'
+			'everyone@enron.email',
+			'alerts@alerts.craigslist.org'
 		],
 		fromAddressEndsWith: [
 		],
 		fromAddressRegex: [
-
+			/notifications@\w+\.discoursemail\.com/,
 		],
 	}
 
