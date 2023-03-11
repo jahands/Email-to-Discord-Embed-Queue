@@ -4,6 +4,7 @@ import addrs from 'email-addresses'
 
 export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise<{ name: string, hook: string }> {
 	const fromHeader = parseFromEmailHeader(data.rawFromHeader)
+	const fromAddress = fromHeader.address.toLowerCase()
 	const bulk = {
 		to: [
 		],
@@ -69,6 +70,13 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'.milkroad.com',
 			'@decryptmedia.com',
 			'.slickdeals.net',
+			'@mindfieldonline.com', // survey
+			'.nationalgeographic.com',
+			'.etsy.com',
+			'@flipboard.com',
+			'.target.com',
+			'@nicolebianchi.com',
+			'@redditmail.com',
 		],
 		fromAddressRegex: [
 			/^notifications@[\w-]+\.discoursemail\.com$/,
@@ -83,16 +91,16 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 		]
 	}
 
-	if (fromHeader.address === 'notifications@github.com') {
+	if (fromAddress === 'notifications@github.com') {
 		return { hook: env.GITHUBHOOK, name: 'github' }
 
-	} else if (fromHeader.address === 'notifications@disqus.net') {
+	} else if (fromAddress === 'notifications@disqus.net') {
 		return { hook: env.DISQUSHOOK, name: 'disqus' }
 
-	} else if (isGerrit(fromHeader.address)) {
+	} else if (isGerrit(fromAddress, data.from.toLowerCase())) {
 		return { hook: env.GERRITHOOK, name: 'gerrit' }
 
-	} else if (fromHeader.address === 'googlealerts-noreply@google.com') {
+	} else if (fromAddress === 'googlealerts-noreply@google.com') {
 		return { hook: env.GOOGLEALERTSHOOK, name: 'google_alerts' }
 
 	} else if ([
@@ -101,32 +109,38 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 		return { hook: env.GOVHOOK, name: 'gov-lists' }
 
 	} else if (
-		bulk.to.some(s => data.to.startsWith(s)) ||
-		bulk.fromAddress.includes(fromHeader.address) ||
-		bulk.fromAddressEndsWith.some(s => fromHeader.address.endsWith(s)) ||
-		bulk.fromAddressRegex.some(re => re.test(fromHeader.address))
+		bulk.to.some(s => data.to.toLowerCase().startsWith(s)) ||
+		bulk.fromAddress.includes(fromAddress) ||
+		bulk.fromAddressEndsWith.some(s => fromAddress.endsWith(s)) ||
+		bulk.fromAddressRegex.some(re => re.test(fromAddress))
 	) {
 		return { hook: env.BULKHOOK, name: 'bulk' }
 
 	} else if (
-		sus.fromAddressEndsWith.some(s => fromHeader.address.endsWith(s))
+		sus.fromAddressEndsWith.some(s => fromAddress.endsWith(s))
 	) {
 		return { hook: env.SUSHOOK, name: 'sus' }
 
-	} else if (fromHeader.address === 'alerts@weatherusa.net') {
+	} else if ([
+		'alerts@weatherusa.net',
+		'nbc26@alerts.scrippsweb.com'
+	].includes(fromAddress)
+	) {
 		return { hook: env.WEATHERHOOK, name: 'weather' }
 	}
 
 	return { hook: env.DISCORDHOOK, name: 'default' }
 }
 
-function isGerrit(from: string) {
+function isGerrit(from: string, envelopeFrom: string) {
 	const fromRe = [
 		/^noreply-gerritcodereview-[\w-]+=+@chromium\.org$/,
 		/^jenkinsci-commits@googlegroups\.com$/, // not Gerrit but feels similar
 		/^.*@chromium\.org$/, // might not be Gerrit, but feels similar
 	]
-	return fromRe.some(re => re.test(from))
+	return fromRe.some(re => re.test(from)) || [
+		'@chromium.org'
+	].some(s => envelopeFrom.endsWith(s))
 }
 
 /** Parses out the email address from a From header */
