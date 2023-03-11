@@ -61,7 +61,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'.cbsnews.com',
 			'@ayushchat.com', // almost sus
 			'.today.com',
-
+			'.nbcnews.com',
 		],
 		fromAddressRegex: [
 			/^notifications@[\w-]+\.discoursemail\.com$/,
