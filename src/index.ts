@@ -21,12 +21,21 @@ export default {
 			const messagesByWebhook = {} as Record<string, { data: Message<EmbedQueueData>[], name: string }>
 			// const hookNames = new Map<string, number>()
 			for (const msg of batch.messages) {
-				const { hook, name } = await getDiscordWebhook(msg.body, env)
-				if (!messagesByWebhook[hook]) {
-					messagesByWebhook[hook] = { data: [], name }
+				try {
+					const { hook, name } = await getDiscordWebhook(msg.body, env)
+					if (!messagesByWebhook[hook]) {
+						messagesByWebhook[hook] = { data: [], name }
+					}
+					messagesByWebhook[hook].data.push(msg)
+				} catch (e) {
+					if (e instanceof Error) {
+						logtail({
+							env, ctx, e, msg: 'Error getting webhook for message', data: {
+								msg,
+							}, level: LogLevel.Error
+						})
+					}
 				}
-				messagesByWebhook[hook].data.push(msg)
-				// hookNames.set(hook, (hookNames.get(hook) || 0) + 1)
 			}
 
 			// Send embeds to discord
