@@ -39,7 +39,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 	} else if (fromHeader.address === 'notifications@disqus.net') {
 		return { hook: env.DISQUSHOOK, name: 'disqus' }
 
-	} else if (isGerrit(data.from)) {
+	} else if (isGerrit(fromHeader.address)) {
 		return { hook: env.GERRITHOOK, name: 'gerrit' }
 
 	} else if (fromHeader.address === 'googlealerts-noreply@google.com') {
