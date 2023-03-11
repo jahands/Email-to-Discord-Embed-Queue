@@ -34,6 +34,8 @@ export interface Env {
 export interface EmbedQueueData {
 	/** Envelope From attribute of the email message. */
 	from: string
+	/** From header */
+	rawFromHeader: string
 	/** Envelope To attribute of the email message. */
 	to: string
 	/** Subject of email */
@@ -44,4 +46,55 @@ export interface EmbedQueueData {
 	ts: number
 	/** Whether the embed worker should record govDelivery stats */
 	shouldCheckGovDelivery: boolean
+}
+
+export interface EmailFromHeader {
+	raw: string,
+	address: string,
+	local: string,
+	name: string,
+}
+
+declare namespace postalMime {
+	type RawEmail = string | ArrayBuffer | Blob | Buffer;
+
+	type Header = Record<string, string>;
+
+	type Address = {
+			address: string;
+			name: string;
+	};
+
+	type Attachment = {
+			filename: string;
+			mimeType: string;
+			disposition: 'attachment' | 'inline' | null;
+			related?: boolean;
+			contentId?: string;
+			content: string;
+	};
+
+	type Email = {
+			headers: Header[];
+			from: Address;
+			sender?: Address;
+			replyTo?: Address[];
+			deliveredTo?: string;
+			returnPath?: string;
+			to: Address[];
+			cc?: Address[];
+			bcc?: Address[];
+			subject?: string;
+			messageId: string;
+			inReplyTo?: string;
+			references?: string;
+			date?: string;
+			html?: string;
+			text?: string;
+			attachments: Attachment[];
+	};
+}
+
+export declare class PostalMimeType {
+	parse(email: postalMime.RawEmail): Promise<postalMime.Email>;
 }

@@ -1,7 +1,9 @@
 import { Toucan } from 'toucan-js'
-import { Env } from './types'
+import { EmailFromHeader, EmbedQueueData, Env } from './types'
+import addrs from 'email-addresses'
 
-export async function getDiscordWebhook(from: string, to: string, env: Env): Promise<{ name: string, hook: string }> {
+export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise<{ name: string, hook: string }> {
+	const fromHeader = parseFromEmailHeader(data.rawFromHeader)
 	const bulk = {
 		to: [
 			'rorymonroe@',
@@ -18,99 +20,45 @@ export async function getDiscordWebhook(from: string, to: string, env: Env): Pro
 			'today.com@',
 			'msnbc@',
 		],
-		from: [
+		fromAddress: [
 			'everyone@enron.email'
 		],
-		fromEndsWith: [
-			'@alerts.craigslist.org',
-			'.discoursemail.com',
-			'@em.atlassian.com',
-			'@linustechtips.com',
-			'@googlegroups.com',
-			'@forum.rclone.org',
-			'@chromium.org',
-			'@newsletters.cnn.com',
-			'@bounce.buzzfeed.com',
-			'@launchpad.net',
-			'.substack.com',
-			'@latest.newsmax.com',
-			'.groupon.com',
-			'.theinformation.com',
-			'.theguardian.com',
-			'@email.paireyewear.com',
-			'@notifications.arstechnica.com',
-			'@email.sltrib.com',
-			'.officedepot.com',
-			'.propublica.net',
-			'.nytimes.com',
-			'@cmail20.com', // wsj.com
-			'@cmail19.com', // wsj.com
-			'.cbssports.com',
-			'@email.caddyserver.com',
-			'@email.medium.com',
-			'.lifehacker.com',
-			'.benzinga.com',
-			'@ubuntuforums.org',
-			'@lists.ubuntu.com',
-			'.grabagun.com',
-			'.appsumo.com',
-			'.cbinsights.com',
-			'@ebay.com',
-			'.tldrnewsletter.com',
-			'.freecryptorewards.com',
-			'.rd.com',
-			'.biblegateway.com',
-			'@blu-ray.com',
-			'.thuma.co',
-			'.nectarsleep.com',
-			'.mindfieldonline.com',
-			'.time.com',
-			'.morningbrew.com',
-			'.theatlantic.com',
-			'.cbsnews.com',
-			'.shopify.com',
-			'.divenewsletter.com',
-			'.cnn.com',
-			'.thegistsports.com',
-			'.healthline.com',
-			'.thehustle.co',
-			'.flipboard.com',
-			'.target.com',
-			'.slickdeals.net',
-			'.theskimm.com',
-			'.jcrew.com',
-			'.food.com',
+		fromAddressEndsWith: [
 		],
-		fromRegex: [
-			/microsoft\.start@\w+\.microsoft.com/, // eg. microsoft.start@email2.microsoft.com
+		fromAddressRegex: [
+
 		],
 	}
 
-	if (from === 'noreply@github.com'
-		|| from === 'notifications@github.com'
-		|| from.endsWith('@sgmail.github.com')
-	) {
+	if (fromHeader.address === 'notifications@github.com') {
 		return { hook: env.GITHUBHOOK, name: 'github' }
-	} else if (from === 'notifications@disqus.net') {
+
+	} else if (fromHeader.address === 'notifications@disqus.net') {
 		return { hook: env.DISQUSHOOK, name: 'disqus' }
-	} else if (isGerrit(from)) {
+
+	} else if (isGerrit(data.from)) {
 		return { hook: env.GERRITHOOK, name: 'gerrit' }
-	} else if (from.endsWith('@alerts.bounces.google.com')) {
+
+	} else if (fromHeader.address === 'googlealerts-noreply@google.com') {
 		return { hook: env.GOOGLEALERTSHOOK, name: 'google_alerts' }
+
 	} else if ([
 		'usa-gov-lists@', 'uscis@', 'dol@', 'fda@', 'uk-gov-lists@'
-	].some(s => to.startsWith(s))) {
+	].some(s => data.to.startsWith(s))) {
 		return { hook: env.GOVHOOK, name: 'gov-lists' }
+
 	} else if (
-		bulk.to.some(s => to.startsWith(s)) ||
-		bulk.from.includes(from) ||
-		bulk.fromEndsWith.some(s => from.endsWith(s)) ||
-		bulk.fromRegex.some(re => re.test(from))
+		bulk.to.some(s => data.to.startsWith(s)) ||
+		bulk.fromAddress.includes(data.from) ||
+		bulk.fromAddressEndsWith.some(s => data.from.endsWith(s)) // ||
+		// bulk.fromAddressRegex.some(re => re.test(data.from))
 	) {
 		return { hook: env.BULKHOOK, name: 'bulk' }
-	} else if (from === 'alerts@weatherusa.net') {
+
+	} else if (fromHeader.address === 'alerts@weatherusa.net') {
 		return { hook: env.WEATHERHOOK, name: 'weather' }
 	}
+
 	return { hook: env.DISCORDHOOK, name: 'default' }
 }
 
@@ -120,6 +68,25 @@ function isGerrit(from: string) {
 		/^chromium-reviews\+\w+@chromium\.org$/, // chromium gerrit
 	]
 	return fromRe.some(re => re.test(from))
+}
+
+/** Parses out the email address from a From header */
+export function parseFromEmailHeader(from: string): EmailFromHeader {
+	const ad = addrs.parseOneAddress(
+		{
+			input: from,
+			oneResult: true,
+			rfc6532: true, // unicode
+		}
+	) as emailAddresses.ParsedMailbox | null
+	if (!ad) throw new Error(`unable to parse from: ${from}`)
+	// @ts-expect-error - comments is not in the type
+	const comments: string | undefined = ad.comments
+	let name = ad.name || ''
+	if (comments && comments.length > 0) {
+		name = `${name} ${comments}`
+	}
+	return { address: ad.address, name, raw: from, local: ad.local || '' }
 }
 
 export function getAuthHeader(env: Env): { Authorization: string } {

@@ -3,8 +3,8 @@ import PostalMime from "postal-mime"
 import { convert as convertHTML } from 'html-to-text';
 
 import { DISCORD_EMBED_LIMIT, DISCORD_TOTAL_LIMIT } from "./constants"
-import { EmbedQueueData, Env } from './types'
-import { getAuthHeader, getDiscordHeaders, getRateLimiter, getSentry, waitForDiscordReset } from "./utils"
+import { EmailFromHeader, EmbedQueueData, Env, PostalMimeType } from './types'
+import { getAuthHeader, getDiscordHeaders, getRateLimiter, getSentry, parseFromEmailHeader, waitForDiscordReset } from "./utils"
 import { logtail, LogLevel } from "./logtail";
 import { getGovDeliveryID, getGovDeliveryStats } from "./govdelivery";
 import pRetry, { AbortError } from "p-retry";
@@ -43,12 +43,15 @@ export async function getDiscordEmbedBatches(
 	env: Env,
 	ctx: ExecutionContext
 ): Promise<Batch[]> {
+	const sentry = getSentry(env, ctx)
+
 	const batches: Batch[] = []
 
 	let batch: Batch = newBatch(hookURL, hookName)
 	const govDeliveryStats = getGovDeliveryStats()
 
 	for (const message of messages) {
+		const fromHeader: EmailFromHeader = parseFromEmailHeader(message.body.rawFromHeader)
 		let rawEmail: R2ObjectBody | null | undefined
 		try {
 			rawEmail = await pRetry(async () => {
@@ -81,27 +84,48 @@ export async function getDiscordEmbedBatches(
 
 		if (!rawEmail) {
 			// Ignore this message but log to sentry
-			getSentry(env, ctx).withScope((scope) => {
-				scope.setExtra('email.r2path', message.body.r2path)
-				scope.setExtra('email.from', message.body.from)
-				scope.setExtra('email.subject', message.body.subject)
-				scope.setExtra('email.to', message.body.to)
-				scope.setExtra('rawEmail', rawEmail)
+			sentry.withScope((scope) => {
+				scope.setExtras({
+					email: {
+						r2path: message.body.r2path,
+						from: message.body.from,
+						rawFromHeader: fromHeader.raw,
+						subject: message.body.subject,
+						to: message.body.to,
+						rawEmail,
+					},
+				})
 				const msg = 'Unable to get raw email from R2!! Skipping this message'
 				logtail({ env, ctx, msg, level: LogLevel.Error })
 			})
 			continue
 		}
 		const arrayBuffer = await rawEmail.arrayBuffer()
-		const parser = new PostalMime()
-		const email = await parser.parse(arrayBuffer) as {
-			text: string,
-			html: string,
-			headers: { key: string, value: string }[]
-		}
+		const parser = new PostalMime() as PostalMimeType
+		const email = await parser.parse(arrayBuffer)
 		let text = email.text
 		if (!text || ['', '\n', '&nbsp;'].includes(text.trim())) {
-			text = convertHTML(email.html)
+			if (email.html) {
+				text = convertHTML(email.html)
+			}
+		}
+		if (!text) {
+			// Ignore this message but log to sentry
+			sentry.withScope((scope) => {
+				scope.setExtras({
+					email: {
+						r2path: message.body.r2path,
+						from: message.body.from,
+						rawFromHeader: fromHeader.raw,
+						subject: message.body.subject,
+						to: message.body.to,
+					},
+					rawEmail,
+				})
+				const msg = 'Unable to get text from email!! Skipping this message'
+				logtail({ env, ctx, msg, level: LogLevel.Error })
+			})
+			continue
 		}
 
 		// BEGIN GOVDELIVERY STATS
@@ -113,26 +137,26 @@ export async function getDiscordEmbedBatches(
 			for (const next of [text, email.text, email.html]) {
 				if (!next) continue
 				try {
-					// logtail({
-					// 	env, ctx, msg: 'Attempting to get GovDelivery ID',
-					// 	level: LogLevel.Info, useSentry: false, data: {
-					// 		message, emailContent: next
-					// 	}
-					// })
 					let govDeliveryID = getGovDeliveryID(next)
 					if (!govDeliveryID) throw new Error('No GovDelivery ID found')
 
 					govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
 					break // Take first ID we find
 				} catch (e) {
-					getSentry(env, ctx).withScope(scope => {
+					sentry.withScope(scope => {
 						if (e instanceof Error) {
-							scope.setExtra('email.govdelivery.text', next)
-							scope.setExtra('email.govdelivery.from', message.body.from)
-							scope.setExtra('email.govdelivery.subject', message.body.subject)
-							scope.setExtra('email.govdelivery.to', message.body.to)
-							scope.setExtra('email.govdelivery.r2path', message.body.r2path)
-							scope.setExtra('email.govdelivery.headers', email.headers)
+							scope.setExtras({
+								email: {
+									govDelivery: {
+										text: next,
+										fromHeader,
+										subject: message.body.subject,
+										to: message.body.to,
+										r2path: message.body.r2path,
+										headers: email.headers,
+									},
+								}
+							})
 							logtail({
 								env, ctx, e, msg: 'Failed to get GovDelivery ID: ' + e.message,
 								level: LogLevel.Error,
@@ -145,8 +169,14 @@ export async function getDiscordEmbedBatches(
 
 		// END GOVDELIVERY STATS
 
-		const { embed, size } = createEmbedBody(text,
-			message.body.subject, message.body.to, message.body.from, message.body.ts)
+		const { embed, size } = createEmbedBody(
+			text,
+			message.body.subject,
+			message.body.to,
+			message.body.from,
+			fromHeader,
+			message.body.ts
+		)
 		if (batch.size + size > DISCORD_TOTAL_LIMIT || batch.embeds.length >= 10) {
 			batches.push(batch)
 			batch = newBatch(hookURL, hookName)
@@ -431,9 +461,20 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 	}
 }
 
-function createEmbedBody(emailText: string, subject: string, to: string, from: string, ts: number) {
-	const footer = `This email was sent to ${to}`
-	const author = from
+function createEmbedBody(
+	emailText: string,
+	subject: string,
+	to: string,
+	from: string,
+	fromHeader: EmailFromHeader,
+	ts: number
+) {
+	const footer = `This email was sent to ${to}\nFrom: ${from}`
+
+	let author = `${fromHeader.name} <${fromHeader.address}>`
+	if (author.length > 64) {
+		author = `${fromHeader.name}\n${fromHeader.address}`
+	}
 
 	// Add timestamp to the end of the email text
 	let title = subject

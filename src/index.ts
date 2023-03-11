@@ -21,7 +21,7 @@ export default {
 			const messagesByWebhook = {} as Record<string, { data: Message<EmbedQueueData>[], name: string }>
 			// const hookNames = new Map<string, number>()
 			for (const msg of batch.messages) {
-				const { hook, name } = await getDiscordWebhook(msg.body.from, msg.body.to, env)
+				const { hook, name } = await getDiscordWebhook(msg.body, env)
 				if (!messagesByWebhook[hook]) {
 					messagesByWebhook[hook] = { data: [], name }
 				}
