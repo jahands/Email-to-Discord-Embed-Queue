@@ -22,7 +22,9 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 		],
 		fromAddress: [
 			'everyone@enron.email',
-			'alerts@alerts.craigslist.org'
+			'alerts@alerts.craigslist.org',
+			'noreply@caddy.community',
+			'do.not.reply@linustechtips.com',
 		],
 		fromAddressEndsWith: [
 		],
@@ -50,9 +52,9 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 
 	} else if (
 		bulk.to.some(s => data.to.startsWith(s)) ||
-		bulk.fromAddress.includes(data.from) ||
-		bulk.fromAddressEndsWith.some(s => data.from.endsWith(s)) // ||
-		// bulk.fromAddressRegex.some(re => re.test(data.from))
+		bulk.fromAddress.includes(fromHeader.address) ||
+		bulk.fromAddressEndsWith.some(s => fromHeader.address.endsWith(s)) ||
+		bulk.fromAddressRegex.some(re => re.test(data.from))
 	) {
 		return { hook: env.BULKHOOK, name: 'bulk' }
 
