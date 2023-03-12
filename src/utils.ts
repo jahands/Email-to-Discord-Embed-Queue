@@ -89,6 +89,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'@appsumo.com',
 			'@googlegroups.com',
 			'.nbcboston.com',
+			'.sapling.com',
 		],
 		envelopeFromEndsWith: [
 			'@lists.ubuntu.com',
