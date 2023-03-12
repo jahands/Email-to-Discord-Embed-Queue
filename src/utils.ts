@@ -77,6 +77,23 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'.target.com',
 			'@nicolebianchi.com',
 			'@redditmail.com',
+			'@morningbrew.com',
+			'.dowjones.com',
+			'.officedepot.com',
+			'@exponentialview.co',
+			'@davidbclear.com',
+			'@twitter.com',
+			'.npr.org',
+			'@theatlantic.com',
+			'.lifehacker.com',
+			'@appsumo.com',
+			'@googlegroups.com',
+			'.nbcboston.com',
+		],
+		envelopeFromEndsWith: [
+			'@lists.ubuntu.com',
+			'@lists.mozilla.org',
+			'@lists.isc.org',
 		],
 		fromAddressRegex: [
 			/^notifications@[\w-]+\.discoursemail\.com$/,
@@ -112,6 +129,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 		bulk.to.some(s => data.to.toLowerCase().startsWith(s)) ||
 		bulk.fromAddress.includes(fromAddress) ||
 		bulk.fromAddressEndsWith.some(s => fromAddress.endsWith(s)) ||
+		bulk.envelopeFromEndsWith.some(s => data.from.toLowerCase().endsWith(s)) ||
 		bulk.fromAddressRegex.some(re => re.test(fromAddress))
 	) {
 		return { hook: env.BULKHOOK, name: 'bulk' }
