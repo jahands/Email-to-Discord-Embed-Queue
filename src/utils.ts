@@ -13,7 +13,6 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'alerts@alerts.craigslist.org',
 			'noreply@caddy.community',
 			'do.not.reply@linustechtips.com',
-			'subscriptions@medium.com',
 			'forum@linuxquestions.org',
 			'access@interactive.wsj.com',
 		],
@@ -87,14 +86,26 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'@theatlantic.com',
 			'.lifehacker.com',
 			'@appsumo.com',
-			'@googlegroups.com',
 			'.nbcboston.com',
 			'.sapling.com',
-		],
+			'@thuma.co',
+			'@coindesk.com',
+			'@activecampaign.com',
+			'@tldrnewsletter.com',
+			'@joshspector.com',
+			'@medium.com',
+			'.datacenterknowledge.com',
+			'.cbssports.com',
+			'@thegistsports.com',
+			'.healthline.com',
+			'.bnc.ca',
+			'.collegeboard.org',
+		].map(s => [`@${s}`, `.${s}`]).flat(),
 		envelopeFromEndsWith: [
 			'@lists.ubuntu.com',
 			'@lists.mozilla.org',
 			'@lists.isc.org',
+			'@googlegroups.com',
 		],
 		fromAddressRegex: [
 			/^notifications@[\w-]+\.discoursemail\.com$/,
@@ -106,6 +117,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'@benzinga.com', // stocks
 			'.freecryptorewards.com',
 			'@1xbit.com', // crypto
+			'@123greetings.biz', // crypto
 		]
 	}
 
