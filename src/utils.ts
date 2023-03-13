@@ -2,126 +2,127 @@ import { Toucan } from 'toucan-js'
 import { EmailFromHeader, EmbedQueueData, Env } from './types'
 import addrs from 'email-addresses'
 
+const bulk = {
+	to: [
+	],
+	fromAddress: [
+		'everyone@enron.email',
+		'alerts@alerts.craigslist.org',
+		'noreply@caddy.community',
+		'do.not.reply@linustechtips.com',
+		'forum@linuxquestions.org',
+		'access@interactive.wsj.com',
+	],
+	fromAddressEndsWith: [
+		'arstechnica.com',
+		'stackoverflow.email',
+		'em.atlassian.com',
+		'grabagun.com',
+		'grabagun.com',
+		'blu-ray.com',
+		'bugs.launchpad.net',
+		'substack.com',
+		'e.newscientist.com',
+		'camaro5.com',
+		'dailyhodl.com',
+		'terraria.org',
+		'atlasobscura.com',
+		'beehiiv.com',
+		'atlasobscura.com',
+		'foodnetwork.com',
+		'theinformation.com',
+		'theskimm.com',
+		'creatorwizard.com',
+		'sltrib.com', // salt lake tribune
+		'steelersdepot.com',
+		'msnbc.com',
+		'flylady.net',
+		'technologyreview.com',
+		'biblegateway.com',
+		'forum.rclone.org',
+		'theguardian.com',
+		'buzzfeed.com',
+		'nectarsleep.com',
+		'newsmax.com',
+		'cnn.com',
+		'ebay.com',
+		'theinformation.com',
+		'divenewsletter.com',
+		'groupon.com',
+		'nytimes.com',
+		'games4grandma.com', // wholesome tbh
+		'atlasobscura.com',
+		'rd.com',
+		'itprotoday.com',
+		'time.com',
+		'nbcchicago.com',
+		'cbsnews.com',
+		'ayushchat.com', // almost sus
+		'today.com',
+		'nbcnews.com',
+		'iphonephotographyschool.com', // selling courses
+		'thehustle.co',
+		'bloombergbusiness.com',
+		'milkroad.com',
+		'decryptmedia.com',
+		'slickdeals.net',
+		'mindfieldonline.com', // survey
+		'nationalgeographic.com',
+		'etsy.com',
+		'flipboard.com',
+		'target.com',
+		'nicolebianchi.com',
+		'redditmail.com',
+		'morningbrew.com',
+		'dowjones.com',
+		'officedepot.com',
+		'exponentialview.co',
+		'davidbclear.com',
+		'twitter.com',
+		'npr.org',
+		'theatlantic.com',
+		'lifehacker.com',
+		'appsumo.com',
+		'nbcboston.com',
+		'sapling.com',
+		'thuma.co',
+		'coindesk.com',
+		'activecampaign.com',
+		'tldrnewsletter.com',
+		'joshspector.com',
+		'medium.com',
+		'datacenterknowledge.com',
+		'cbssports.com',
+		'thegistsports.com',
+		'healthline.com',
+		'bnc.ca',
+		'collegeboard.org',
+		'strength.org',
+		'scientology.org',
+	].map(s => [`@${s}`, `.${s}`]).flat(), // optional subdomains
+	envelopeFromEndsWith: [
+		'@lists.ubuntu.com',
+		'@lists.mozilla.org',
+		'@lists.isc.org',
+		'@googlegroups.com',
+	],
+	fromAddressRegex: [
+		/^notifications@[\w-]+\.discoursemail\.com$/,
+	],
+}
+
+const sus = {
+	fromAddressEndsWith: [
+		'@benzinga.com', // stocks
+		'.freecryptorewards.com',
+		'@1xbit.com', // crypto
+		'@123greetings.biz', // crypto
+	]
+}
+
 export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise<{ name: string, hook: string }> {
 	const fromHeader = parseFromEmailHeader(data.rawFromHeader)
 	const fromAddress = fromHeader.address.toLowerCase()
-	const bulk = {
-		to: [
-		],
-		fromAddress: [
-			'everyone@enron.email',
-			'alerts@alerts.craigslist.org',
-			'noreply@caddy.community',
-			'do.not.reply@linustechtips.com',
-			'forum@linuxquestions.org',
-			'access@interactive.wsj.com',
-		],
-		fromAddressEndsWith: [
-			'arstechnica.com',
-			'stackoverflow.email',
-			'em.atlassian.com',
-			'grabagun.com',
-			'grabagun.com',
-			'blu-ray.com',
-			'bugs.launchpad.net',
-			'substack.com',
-			'e.newscientist.com',
-			'camaro5.com',
-			'dailyhodl.com',
-			'terraria.org',
-			'atlasobscura.com',
-			'beehiiv.com',
-			'atlasobscura.com',
-			'foodnetwork.com',
-			'theinformation.com',
-			'theskimm.com',
-			'creatorwizard.com',
-			'sltrib.com', // salt lake tribune
-			'steelersdepot.com',
-			'msnbc.com',
-			'flylady.net',
-			'technologyreview.com',
-			'biblegateway.com',
-			'forum.rclone.org',
-			'theguardian.com',
-			'buzzfeed.com',
-			'nectarsleep.com',
-			'newsmax.com',
-			'cnn.com',
-			'ebay.com',
-			'theinformation.com',
-			'divenewsletter.com',
-			'groupon.com',
-			'nytimes.com',
-			'games4grandma.com', // wholesome tbh
-			'atlasobscura.com',
-			'rd.com',
-			'itprotoday.com',
-			'time.com',
-			'nbcchicago.com',
-			'cbsnews.com',
-			'ayushchat.com', // almost sus
-			'today.com',
-			'nbcnews.com',
-			'iphonephotographyschool.com', // selling courses
-			'thehustle.co',
-			'bloombergbusiness.com',
-			'milkroad.com',
-			'decryptmedia.com',
-			'slickdeals.net',
-			'mindfieldonline.com', // survey
-			'nationalgeographic.com',
-			'etsy.com',
-			'flipboard.com',
-			'target.com',
-			'nicolebianchi.com',
-			'redditmail.com',
-			'morningbrew.com',
-			'dowjones.com',
-			'officedepot.com',
-			'exponentialview.co',
-			'davidbclear.com',
-			'twitter.com',
-			'npr.org',
-			'theatlantic.com',
-			'lifehacker.com',
-			'appsumo.com',
-			'nbcboston.com',
-			'sapling.com',
-			'thuma.co',
-			'coindesk.com',
-			'activecampaign.com',
-			'tldrnewsletter.com',
-			'joshspector.com',
-			'medium.com',
-			'datacenterknowledge.com',
-			'cbssports.com',
-			'thegistsports.com',
-			'healthline.com',
-			'bnc.ca',
-			'collegeboard.org',
-			'strength.org',
-			'scientology.org',
-		].map(s => [`@${s}`, `.${s}`]).flat(), // optional subdomains
-		envelopeFromEndsWith: [
-			'@lists.ubuntu.com',
-			'@lists.mozilla.org',
-			'@lists.isc.org',
-			'@googlegroups.com',
-		],
-		fromAddressRegex: [
-			/^notifications@[\w-]+\.discoursemail\.com$/,
-		],
-	}
-
-	const sus = {
-		fromAddressEndsWith: [
-			'@benzinga.com', // stocks
-			'.freecryptorewards.com',
-			'@1xbit.com', // crypto
-			'@123greetings.biz', // crypto
-		]
-	}
 
 	if (fromAddress === 'notifications@github.com') {
 		return { hook: env.GITHUBHOOK, name: 'github' }
