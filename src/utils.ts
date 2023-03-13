@@ -100,6 +100,8 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 			'healthline.com',
 			'bnc.ca',
 			'collegeboard.org',
+			'strength.org',
+			'scientology.org',
 		].map(s => [`@${s}`, `.${s}`]).flat(), // optional subdomains
 		envelopeFromEndsWith: [
 			'@lists.ubuntu.com',
