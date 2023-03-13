@@ -251,7 +251,7 @@ export async function waitForDiscordReset(response: Response): Promise<void> {
 	const rateLimiter = getRateLimiter()
 	if (rateLimiter.rateLimitedCount >= 3) {
 		console.log('waiting extra!!')
-		await scheduler.wait(1700)
+		await scheduler.wait(1255)
 	}
 
 	const headers = response.headers
