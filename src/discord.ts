@@ -375,7 +375,21 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 			body: formData,
 			headers: getAuthHeader(env)
 		})
-		await waitForDiscordReset(res) // Rate limit ourselves
+		try {
+			await waitForDiscordReset(res) // Rate limit ourselves
+		} catch (e) {
+			if (e instanceof Error) {
+				logtail({
+					env, ctx, e, msg: 'Failed to wait for discord reset: ' + e.message,
+					level: LogLevel.Error,
+					data: {
+						discordHook: hook,
+						discordResponse: res,
+						discordResponseHeaders: getDiscordHeaders(res.headers),
+					}
+				})
+			}
+		}
 		return res
 	}
 	const discordResponse = await sendHook()
