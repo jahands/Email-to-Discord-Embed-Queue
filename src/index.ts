@@ -39,6 +39,7 @@ export default {
 			}
 
 			// Send embeds to discord
+			const promises: Promise<void>[] = []
 			for (const webhook of Object.keys(messagesByWebhook)) {
 				// await sendDiscordEmbeds(
 				// 	messagesByWebhook[webhook].data.map(m => m.body),
@@ -47,13 +48,17 @@ export default {
 				// 	env, ctx)
 
 				// For now, just log the new batches
-				const newBatches = await getDiscordEmbedBatches(
-					messagesByWebhook[webhook].data,
-					webhook,
-					messagesByWebhook[webhook].name,
-					env, ctx)
-				batches.push(...newBatches)
+				const addBatch = async () => {
+					const newBatches = await getDiscordEmbedBatches(
+						messagesByWebhook[webhook].data,
+						webhook,
+						messagesByWebhook[webhook].name,
+						env, ctx)
+					batches.push(...newBatches)
+				}
+				promises.push(addBatch())
 			}
+			await Promise.allSettled(promises)
 			// logtail({
 			// 	env, ctx, msg: 'New batches created', data: {
 			// 		batches
