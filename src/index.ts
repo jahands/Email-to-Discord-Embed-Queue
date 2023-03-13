@@ -7,6 +7,7 @@ import { getDiscordWebhook, initRateLimiter, initSentry } from './utils';
 
 export default {
 	async queue(batch: MessageBatch<EmbedQueueData>, env: Env, ctx: ExecutionContext) {
+		console.log('STARTING AT', new Date())
 		const sentry = initSentry(env, ctx)
 		initGovDeliveryStats()
 		initRateLimiter()
@@ -77,6 +78,8 @@ export default {
 				[hook: string]: Stat
 			}
 			const statsByHook: StatsByHook = {}
+			
+			console.log('SENDING FIRST BATCH AT', new Date())
 			for (const batch of batches) {
 				try {
 					await sendDiscordBatch(batch, env, ctx)
