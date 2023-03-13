@@ -7,7 +7,8 @@ import { getDiscordWebhook, initRateLimiter, initSentry } from './utils';
 
 export default {
 	async queue(batch: MessageBatch<EmbedQueueData>, env: Env, ctx: ExecutionContext) {
-		console.log('STARTING AT', new Date())
+		console.log('STARTING AT           ', new Date())
+						//  'SENDING FIRST BATCH AT'
 		const sentry = initSentry(env, ctx)
 		initGovDeliveryStats()
 		initRateLimiter()
