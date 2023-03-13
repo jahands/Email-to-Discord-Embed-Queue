@@ -100,6 +100,7 @@ const bulk = {
 		'strength.org',
 		'scientology.org',
 		'girlboss.com',
+		'redhat.com',
 	].map(s => [`@${s}`, `.${s}`]).flat(), // optional subdomains
 	envelopeFromEndsWith: [
 		'@lists.ubuntu.com',
