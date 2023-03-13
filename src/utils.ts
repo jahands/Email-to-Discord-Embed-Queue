@@ -109,7 +109,7 @@ const bulk = {
 	fromAddressRegex: [
 		/^notifications@[\w-]+\.discoursemail\.com$/,
 	],
-}
+} as const
 
 const sus = {
 	fromAddressEndsWith: [
@@ -118,7 +118,7 @@ const sus = {
 		'@1xbit.com', // crypto
 		'@123greetings.biz', // crypto
 	]
-}
+} as const
 
 export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise<{ name: string, hook: string }> {
 	const fromHeader = parseFromEmailHeader(data.rawFromHeader)
