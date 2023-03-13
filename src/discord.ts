@@ -49,142 +49,146 @@ export async function getDiscordEmbedBatches(
 
 	let batch: Batch = newBatch(hookURL, hookName)
 	const govDeliveryStats = getGovDeliveryStats()
-
+	const processMessagePromises: Promise<void>[] = []
 	for (const message of messages) {
-		const fromHeader: EmailFromHeader = parseFromEmailHeader(message.body.rawFromHeader)
-		let rawEmail: R2ObjectBody | null | undefined
-		try {
-			rawEmail = await pRetry(async () => {
-				const res = await env.R2EMAILS.get(message.body.r2path)
-				if (res === null) {
-					await scheduler.wait(1000)
-					throw new Error('R2 returned null, maybe it\'s not available yet due to a race condition?')
+		const processMessage = async () => {
+			const fromHeader: EmailFromHeader = parseFromEmailHeader(message.body.rawFromHeader)
+			let rawEmail: R2ObjectBody | null | undefined
+			try {
+				rawEmail = await pRetry(async () => {
+					const res = await env.R2EMAILS.get(message.body.r2path)
+					if (res === null) {
+						await scheduler.wait(1000)
+						throw new Error('R2 returned null, maybe it\'s not available yet due to a race condition?')
+					}
+					return res
+				}, {
+					retries: 10, minTimeout: 250, onFailedAttempt: (e) => {
+						if (e.retriesLeft === 0) {
+							const sentry = getSentry(env, ctx)
+							sentry.setExtra('email.r2path', message.body.r2path)
+							sentry.setExtra('email.from', message.body.from)
+							sentry.setExtra('email.subject', message.body.subject)
+							sentry.setExtra('email.to', message.body.to)
+							sentry.setExtra('r2Error', e)
+						}
+					}
+				})
+			} catch (e) {
+				if (e instanceof Error) {
+					// Ignore this message but log to sentry
+					let msg = 'Unable to get raw email from R2!! Skipping this message: ' + e.message
+					logtail({ env, ctx, e, msg, level: LogLevel.Error })
+					return
 				}
-				return res
-			}, {
-				retries: 10, minTimeout: 250, onFailedAttempt: (e) => {
-					if (e.retriesLeft === 0) {
-						const sentry = getSentry(env, ctx)
-						sentry.setExtra('email.r2path', message.body.r2path)
-						sentry.setExtra('email.from', message.body.from)
-						sentry.setExtra('email.subject', message.body.subject)
-						sentry.setExtra('email.to', message.body.to)
-						sentry.setExtra('r2Error', e)
+			}
+
+			if (!rawEmail) {
+				// Ignore this message but log to sentry
+				sentry.withScope((scope) => {
+					scope.setExtras({
+						email: {
+							r2path: message.body.r2path,
+							from: message.body.from,
+							rawFromHeader: fromHeader.raw,
+							subject: message.body.subject,
+							to: message.body.to,
+							rawEmail,
+						},
+					})
+					const msg = 'Unable to get raw email from R2!! Skipping this message'
+					logtail({ env, ctx, msg, level: LogLevel.Error })
+				})
+				return
+			}
+			const arrayBuffer = await rawEmail.arrayBuffer()
+			const parser = new PostalMime() as PostalMimeType
+			const email = await parser.parse(arrayBuffer)
+			let text = email.text
+			if (!text || ['', '\n', '&nbsp;'].includes(text.trim())) {
+				if (email.html) {
+					text = convertHTML(email.html)
+				}
+			}
+			if (!text) {
+				// Ignore this message but log to sentry
+				sentry.withScope((scope) => {
+					scope.setExtras({
+						email: {
+							r2path: message.body.r2path,
+							from: message.body.from,
+							rawFromHeader: fromHeader.raw,
+							subject: message.body.subject,
+							to: message.body.to,
+						},
+						rawEmail,
+					})
+					const msg = 'Unable to get text from email!! Skipping this message'
+					logtail({ env, ctx, msg, level: LogLevel.Error })
+				})
+				return
+			}
+
+			// BEGIN GOVDELIVERY STATS
+
+			// Recording some stats here since we're parsing anyway
+			// May have already been recorded by email worker - this is
+			// a fallback if it was missing a header
+			if (message.body.shouldCheckGovDelivery) {
+				for (const next of [text, email.text, email.html]) {
+					if (!next) return
+					try {
+						let govDeliveryID = getGovDeliveryID(next)
+						if (!govDeliveryID) throw new Error('No GovDelivery ID found')
+
+						govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
+						break // Take first ID we find
+					} catch (e) {
+						sentry.withScope(scope => {
+							if (e instanceof Error) {
+								scope.setExtras({
+									email: {
+										govDelivery: {
+											text: next,
+											fromHeader,
+											subject: message.body.subject,
+											to: message.body.to,
+											r2path: message.body.r2path,
+											headers: email.headers,
+										},
+									}
+								})
+								logtail({
+									env, ctx, e, msg: 'Failed to get GovDelivery ID: ' + e.message,
+									level: LogLevel.Error,
+								})
+							}
+						})
 					}
 				}
-			})
-		} catch (e) {
-			if (e instanceof Error) {
-				// Ignore this message but log to sentry
-				let msg = 'Unable to get raw email from R2!! Skipping this message: ' + e.message
-				logtail({ env, ctx, e, msg, level: LogLevel.Error })
-				continue
 			}
-		}
 
-		if (!rawEmail) {
-			// Ignore this message but log to sentry
-			sentry.withScope((scope) => {
-				scope.setExtras({
-					email: {
-						r2path: message.body.r2path,
-						from: message.body.from,
-						rawFromHeader: fromHeader.raw,
-						subject: message.body.subject,
-						to: message.body.to,
-						rawEmail,
-					},
-				})
-				const msg = 'Unable to get raw email from R2!! Skipping this message'
-				logtail({ env, ctx, msg, level: LogLevel.Error })
-			})
-			continue
-		}
-		const arrayBuffer = await rawEmail.arrayBuffer()
-		const parser = new PostalMime() as PostalMimeType
-		const email = await parser.parse(arrayBuffer)
-		let text = email.text
-		if (!text || ['', '\n', '&nbsp;'].includes(text.trim())) {
-			if (email.html) {
-				text = convertHTML(email.html)
+			// END GOVDELIVERY STATS
+
+			const { embed, size } = createEmbedBody(
+				text,
+				message.body.subject,
+				message.body.to,
+				message.body.from,
+				fromHeader,
+				message.body.ts
+			)
+			if (batch.size + size > DISCORD_TOTAL_LIMIT || batch.embeds.length >= 10) {
+				batches.push(batch)
+				batch = newBatch(hookURL, hookName)
 			}
+
+			batch.embeds.push({ message, embed })
+			batch.size += size
 		}
-		if (!text) {
-			// Ignore this message but log to sentry
-			sentry.withScope((scope) => {
-				scope.setExtras({
-					email: {
-						r2path: message.body.r2path,
-						from: message.body.from,
-						rawFromHeader: fromHeader.raw,
-						subject: message.body.subject,
-						to: message.body.to,
-					},
-					rawEmail,
-				})
-				const msg = 'Unable to get text from email!! Skipping this message'
-				logtail({ env, ctx, msg, level: LogLevel.Error })
-			})
-			continue
-		}
-
-		// BEGIN GOVDELIVERY STATS
-
-		// Recording some stats here since we're parsing anyway
-		// May have already been recorded by email worker - this is
-		// a fallback if it was missing a header
-		if (message.body.shouldCheckGovDelivery) {
-			for (const next of [text, email.text, email.html]) {
-				if (!next) continue
-				try {
-					let govDeliveryID = getGovDeliveryID(next)
-					if (!govDeliveryID) throw new Error('No GovDelivery ID found')
-
-					govDeliveryStats.set(govDeliveryID, (govDeliveryStats.get(govDeliveryID) || 0) + 1)
-					break // Take first ID we find
-				} catch (e) {
-					sentry.withScope(scope => {
-						if (e instanceof Error) {
-							scope.setExtras({
-								email: {
-									govDelivery: {
-										text: next,
-										fromHeader,
-										subject: message.body.subject,
-										to: message.body.to,
-										r2path: message.body.r2path,
-										headers: email.headers,
-									},
-								}
-							})
-							logtail({
-								env, ctx, e, msg: 'Failed to get GovDelivery ID: ' + e.message,
-								level: LogLevel.Error,
-							})
-						}
-					})
-				}
-			}
-		}
-
-		// END GOVDELIVERY STATS
-
-		const { embed, size } = createEmbedBody(
-			text,
-			message.body.subject,
-			message.body.to,
-			message.body.from,
-			fromHeader,
-			message.body.ts
-		)
-		if (batch.size + size > DISCORD_TOTAL_LIMIT || batch.embeds.length >= 10) {
-			batches.push(batch)
-			batch = newBatch(hookURL, hookName)
-		}
-
-		batch.embeds.push({ message, embed })
-		batch.size += size
+		processMessagePromises.push(processMessage())
 	}
+	await Promise.allSettled(processMessagePromises)
 
 	if (batch.embeds.length > 0) {
 		batches.push(batch)
