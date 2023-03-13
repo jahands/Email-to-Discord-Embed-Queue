@@ -128,7 +128,7 @@ export async function getDiscordWebhook(data: EmbedQueueData, env: Env): Promise
 	const fromHeader = parseFromEmailHeader(data.rawFromHeader)
 	const fromAddress = fromHeader.address.toLowerCase()
 
-	if (fromAddress === 'notifications@github.com') {
+	if (['notifications@github.com', 'noreply@github.com'].includes(fromAddress)) {
 		return { hook: env.GITHUBHOOK, name: 'github' }
 
 	} else if (fromAddress === 'notifications@disqus.net') {
