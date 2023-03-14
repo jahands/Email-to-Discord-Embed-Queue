@@ -118,6 +118,7 @@ const bulk = {
 		'qz.com',
 		'inboxreads.co',
 		'thetilt.com',
+		'.freecryptorewards.com',
 	].map(s => [`@${s}`, `.${s}`]).flat(), // optional subdomains
 	envelopeFromEndsWith: [
 		'@lists.ubuntu.com',
@@ -133,7 +134,6 @@ const bulk = {
 const sus = {
 	fromAddressEndsWith: [
 		'@benzinga.com', // stocks
-		'.freecryptorewards.com',
 		'@1xbit.com', // crypto
 		'@123greetings.biz', // crypto
 	]
