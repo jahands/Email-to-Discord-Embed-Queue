@@ -103,6 +103,21 @@ const bulk = {
 		'redhat.com',
 		'producthunt.com',
 		'food.com',
+		'mozilla.com',
+		'propublica.net',
+		'bloombergview.com',
+		'quora.com',
+		'ubuntuforums.org',
+		'crooked.com',
+		'mailbrew.com', // newsletter
+		'kohls.com',
+		'livingsocial.com',
+		'oup.com',
+		'thehealthy.com',
+		'newsletters.scrippsweb.com', // Some subdomains are weather
+		'qz.com',
+		'inboxreads.co',
+		'thetilt.com',
 	].map(s => [`@${s}`, `.${s}`]).flat(), // optional subdomains
 	envelopeFromEndsWith: [
 		'@lists.ubuntu.com',
