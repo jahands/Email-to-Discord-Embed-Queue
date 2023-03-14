@@ -493,6 +493,9 @@ function createEmbedBody(
 	if (author.length > 64) {
 		author = `${fromHeader.name}\n${fromHeader.address}`
 	}
+	if (author.length > 256) {
+		author = fromHeader.address
+	}
 
 	// Add timestamp to the end of the email text
 	let title = subject
