@@ -417,7 +417,7 @@ function createEmbedBody(
 			DISCORD_EMBED_LIMIT - trimmedMessage.length - sizeWithoutDescription - timestampLength
 		).trim() + trimmedMessage
 	}
-	if (!description.endsWith('\n')) {
+	if (!description.endsWith('\n') && !description.endsWith('\r')) {
 		description += '\n'
 	}
 	description += timestamp
