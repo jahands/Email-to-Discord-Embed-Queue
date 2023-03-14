@@ -353,6 +353,12 @@ function trimEmbedBody(fromHeader: EmailFromHeader, body: string): string {
 		if (lastIdx !== -1) {
 			body = body.substring(0, lastIdx)
 		}
+	} else if (fromHeader.address === 'alerts@weatherusa.net') {
+		const search = '--------------------------------------------------'
+		const lastIdx = body.lastIndexOf(search)
+		if (lastIdx !== -1) {
+			body = body.substring(0, lastIdx)
+		}
 	}
 	return body
 }
