@@ -479,8 +479,8 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 	}
 }
 
-function trimEmbedBody(fromHeaderAddress: string, body: string): string {
-	if (fromHeaderAddress === 'notifications@github.com') {
+function trimEmbedBody(fromHeader: EmailFromHeader, body: string): string {
+	if (fromHeader.address === 'notifications@github.com') {
 		[
 			['Reply to this email directly or view it on GitHub:\n', ''],
 			['View it on GitHub:\n', ''],
@@ -527,7 +527,7 @@ function createEmbedBody(
 	}
 
 	// Trim certain emails
-	emailText = trimEmbedBody(fromHeader.address, emailText)
+	emailText = trimEmbedBody(fromHeader, emailText)
 
 	// Remove excessive newlines
 	emailText = emailText.replace(/\n\s*\n/g, '\n\n')
