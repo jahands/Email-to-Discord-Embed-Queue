@@ -490,9 +490,9 @@ function createEmbedBody(
 	const skipFromHeader = [
 		'notifications@github.com' // Save a tiny bit of space for GH
 	]
-	let footer = `Sent to: ${to}`
+	let footer = `Sent to ${to}`
 	if (!skipFromHeader.includes(fromHeader.address)) {
-		footer += `\nFrom: ${from}`
+		footer += `\nFrom ${from}`
 	}
 
 	let author = `${fromHeader.name} <${fromHeader.address}>`
