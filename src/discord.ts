@@ -350,7 +350,8 @@ function trimEmbedBody(fromHeader: EmailFromHeader, body: string): string {
 		[
 			['Reply to this email directly or view it on GitHub:\n', ''],
 			['View it on GitHub:\n', ''],
-			['You are receiving this because you are subscribed to this thread.\n', '']
+			['You are receiving this because you are subscribed to this thread.\n', ''],
+			['You can view, comment on, or merge this pull request online at:\n', ''],
 		]
 			.forEach(([search, replace]) => {
 				body = body.replace(search, replace)
