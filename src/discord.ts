@@ -372,8 +372,10 @@ function createEmbedBody(
 	ts: number
 ) {
 	const skipFromHeader = [
-		'notifications@github.com', // Save a tiny bit of space for GH
-		'notifications@disqus.net'
+		// Save a tiny bit of space for bulk stuff
+		'notifications@github.com',
+		'notifications@disqus.net',
+		'alerts@weatherusa.net'
 	]
 	let footer = `Sent to ${to}`
 	if (!skipFromHeader.includes(fromHeader.address)) {
