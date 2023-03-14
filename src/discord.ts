@@ -479,6 +479,20 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 	}
 }
 
+function trimEmbedBody(fromHeaderAddress: string, body: string): string {
+	if (fromHeaderAddress === 'notifications@github.com') {
+		[
+			['Reply to this email directly or view it on GitHub:\n', ''],
+			['View it on GitHub:\n', ''],
+			['You are receiving this because you are subscribed to this thread.\n', '']
+		]
+			.forEach(([search, replace]) => {
+				body = body.replace(search, replace)
+			})
+	}
+	return body
+}
+
 function createEmbedBody(
 	emailText: string,
 	subject: string,
@@ -512,6 +526,9 @@ function createEmbedBody(
 		title = title.substring(0, 253) + '...'
 	}
 
+	// Trim certain emails
+	emailText = trimEmbedBody(fromHeader.address, emailText)
+
 	// Remove excessive newlines
 	emailText = emailText.replace(/\n\s*\n/g, '\n\n')
 	const sizeWithoutDescription = title.length +
@@ -522,8 +539,8 @@ function createEmbedBody(
 	const timestampLength = timestamp.length + 1 // +1 for the newline we may need to prefix
 	const trimmedMessage = ' ...(TRIMMED)'
 	let description = emailText
-	if ((emailText.length + sizeWithoutDescription + timestampLength) > DISCORD_EMBED_LIMIT) {
-		description = emailText.substring(0,
+	if ((description.length + sizeWithoutDescription + timestampLength) > DISCORD_EMBED_LIMIT) {
+		description = description.substring(0,
 			DISCORD_EMBED_LIMIT - trimmedMessage.length - sizeWithoutDescription - timestampLength
 		).trim() + trimmedMessage
 	}
