@@ -487,11 +487,11 @@ function createEmbedBody(
 	fromHeader: EmailFromHeader,
 	ts: number
 ) {
-	const skipFrom = [
-		'noreply@github.com' // Save a tiny bit of space for GH
+	const skipFromHeader = [
+		'notifications@github.com' // Save a tiny bit of space for GH
 	]
 	let footer = `Sent to: ${to}`
-	if (!skipFrom.includes(from)) {
+	if (!skipFromHeader.includes(fromHeader.address)) {
 		footer += `\nFrom: ${from}`
 	}
 
