@@ -337,6 +337,14 @@ async function sendHookWithEmbeds(env: Env, ctx: ExecutionContext, hook: string,
 	}
 }
 
+function trimAfterSeparater(body: string, separator: string): string {
+	const lastIdx = body.lastIndexOf(separator)
+	if (lastIdx !== -1) {
+		body = body.substring(0, lastIdx)
+	}
+	return body
+}
+
 function trimEmbedBody(fromHeader: EmailFromHeader, body: string): string {
 	if (fromHeader.address === 'notifications@github.com') {
 		[
@@ -348,17 +356,9 @@ function trimEmbedBody(fromHeader: EmailFromHeader, body: string): string {
 				body = body.replace(search, replace)
 			})
 	} else if (fromHeader.address === 'notifications@disqus.net') {
-		const search = '-----'
-		const lastIdx = body.lastIndexOf(search)
-		if (lastIdx !== -1) {
-			body = body.substring(0, lastIdx)
-		}
+		body = trimAfterSeparater(body, '-----')
 	} else if (fromHeader.address === 'alerts@weatherusa.net') {
-		const search = '--------------------------------------------------'
-		const lastIdx = body.lastIndexOf(search)
-		if (lastIdx !== -1) {
-			body = body.substring(0, lastIdx)
-		}
+		body = trimAfterSeparater(body, '--------------------------------------------------')
 	}
 	return body
 }
