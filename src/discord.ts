@@ -487,7 +487,13 @@ function createEmbedBody(
 	fromHeader: EmailFromHeader,
 	ts: number
 ) {
-	const footer = `This email was sent to ${to}\nFrom: ${from}`
+	const skipFrom = [
+		'noreply@github.com' // Save a tiny bit of space for GH
+	]
+	let footer = `Sent to: ${to}`
+	if (!skipFrom.includes(from)) {
+		footer += `\nFrom: ${from}`
+	}
 
 	let author = `${fromHeader.name} <${fromHeader.address}>`
 	if (author.length > 64) {
